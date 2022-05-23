@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./images/favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="manifest" href="./manifest.json">
+    <title>SCJ - Pedidos</title>
+</head>
+<body>
+
+    <div id="historico">
+        <div id="textoHistorico"></div>
+        <div id="botoesHistorico">
+            <div onclick="fecharTela()" class="botoes2" id="botaoFecharHistorico">Fechar</div>
+            <a id="botaoDownload"><div class="botoes2" id="botaoBaixarHistorico">Baixar</div></a>
+        </div>
+        
+    </div>
+    
+    
+    <div id="telaFinalizarPedido">
+        <div id="telaFinalizarPedidoTexto"></div>
+        <div id="caixaTelaFinalizar">
+            <div class="botoes1" id="caixaTotal">R$ 0,00</div>
+            <div class="botoes1" id="caixaTroco">R$ 0,00</div>
+        </div>
+        <input placeholder="Digite o valor" onkeyup="calcularTroco()" type="number" name="inputPago" id="inputPago">
+        <div id="caixaBotoes">
+            <div onclick="fecharTela()" class="botoes2" id="botaoFechar"><p>Fechar</p></div>
+            <div onclick="salvarNoHistorico()" class="botoes2" id="botaoCalcular"><p>Salvar</p></div>
+        </div>
+        
+    </div>
+
+    <div id="container">
+        <div id="espaçoEmBranco"></div>
+    </div>
+
+    
+
+    <script src="./script/script.js"></script>
+</body>
+</html>

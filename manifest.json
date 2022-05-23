@@ -1,0 +1,34 @@
+{
+  "short_name": "SCJ - Pedidos",
+  "name": "SCJ - Pedidos",
+  "description": "App de controle e manuseio de pedidos",
+  "icons": [
+    {
+      "src": "/images/iconeApp.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose":"any maskable"
+    },
+    {
+      "src": "/images/iconeApp.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose":"any maskable"
+    }
+  ],
+  "start_url": ".",
+  "background_color": "#f1f9ff",
+  "display": "fullscreen",
+  "orientation": "portrait-primary",
+  "theme_color": "#354b5a",
+  "shortcuts": [
+    {
+      "short_name": "SCJ - Pedidos",
+      "name": "SCJ - Pedidos",
+      "description": "App de controle e manuseio de pedidos",
+      "url": "?source=pwa",
+      "icons": [{ "src": "/images/iconeApp.png", "sizes": "192x192" }]
+    }
+  ]
+
+}
