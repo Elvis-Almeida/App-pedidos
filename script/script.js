@@ -165,6 +165,19 @@ function formatarNumero(prefixo ,numero, sufixo) {
     }
 }
 
+function gerarDataAtual() {
+    let data = new Date();
+    let dia = String(data.getDate()).padStart(2, '0');
+    let mes = String(data.getMonth() + 1).padStart(2, '0');
+    let ano = data.getFullYear();
+    let horas = String(data.getHours()).padStart(2, '0');
+    let minutos = String(data.getMinutes()).padStart(2, '0');
+
+    dataAtual = dia + '/' + mes + '/' + ano + ' - ' + horas + ':' + minutos;
+    console.log(dataAtual);
+    return dataAtual;
+}
+
 function salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
     
         let totalPagar          = parseFloat(localStorage.getItem('totalPedido'));
@@ -173,10 +186,9 @@ function salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinal
         let caixaDeTexto             = document.querySelector(idCaixaDeTextoDePedidos).textContent;
         let historicoResumo;
         let totalGeral          = parseFloat(localStorage.getItem('totalGeral'));
-
-        console.log(totalGeral+" AEEEEEEEEEE");
+        
+       
         historicoResumo = localStorage.getItem('historicoResumo');
-        console.log(totalPagar);
         totalGeral += totalPagar;
 
         if (historicoResumo == '') {
@@ -189,10 +201,10 @@ function salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinal
         localStorage.setItem('totalGeral', totalGeral);
         localStorage.setItem('historicoResumo', historicoResumo);
 
-        listaPedido += '-------- '+ quantidadeDePedidos +' -------- <br> ';
+        listaPedido += '-------- '+ quantidadeDePedidos +' -------- <br> '+ gerarDataAtual() +' <br> <br> ';
         listaPedido += document.querySelector(idTelaFinalizarPedidoTexto).innerHTML;
 
-        listaPedido += formatarNumero('Total = ', totalPagar, ' <br> ');
+        listaPedido += formatarNumero('Total = ', totalPagar, ' <br> <br> ');
         localStorage.setItem('historicoDePedidos', listaPedido);
 
         quantidadeDePedidos++;
@@ -241,10 +253,19 @@ function calcularTroco(idInputTroco, idCaixaDeTextoTroco,  idTelaFinalizarPedido
 
 function gerarHistoricoResumido() {
     let totalGeral = parseFloat(localStorage.getItem('totalGeral'));
-    return formatarTextoDePedidos(localStorage.getItem('historicoResumo')) + " <br> Total = " + formatarNumero('',totalGeral,'');
+    return 'Arquivo gerado em '+ gerarDataAtual() + '\n\n' + formatarTextoDePedidos(localStorage.getItem('historicoResumo')) + " <br> Total = " + formatarNumero('',totalGeral,'');
 }
 
+// let verificar = gerarDataAtual();
+// verificar = String(verificar).split('/');
+// let tem = String(verificar[2]).split(' - ');
+// verificar[2] = tem[0]
+// verificar[3] = tem[1].split(':')[0]
+// verificar[4] = tem[1].split(':')[1]
+// console.log(verificar);
 
+// if (!(parseInt(verificar[0]) >= 24 && parseInt(verificar[1]) >= 5 && parseInt(verificar[3]) >= 11 && parseInt(verificar[4]) >= 40)) {
+    
 
 // ------------- principal -------------
 let container = document.getElementById('container');
@@ -351,4 +372,4 @@ if (!localStorage.getItem("historicoResumo")) {
 criarbotoes(container, cardapio, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos);
 registerServiceWorker();
 
-//adicionar data e hora nos pedidos feitos;
+// }
