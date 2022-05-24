@@ -10,16 +10,21 @@
     <title>SCJ - Pedidos</title>
 </head>
 <body>
-
+ 
     <div id="historico">
         <div id="textoHistorico"></div>
         <div id="botoesHistorico">
-            <div onclick="fecharTela()" class="botoes2" id="botaoFecharHistorico">Fechar</div>
+            <div class="botoes2" id="botaoFecharHistorico">Fechar</div>
             <a id="botaoDownload"><div class="botoes2" id="botaoBaixarHistorico">Baixar</div></a>
         </div>
         
     </div>
     
+    <div id="caixaDeConfirmacaoDeSalvamento">
+        <p id="textoDeConfirmacao">Tem certeza que deseja salvar?</p>
+        <div class="botoes2 botoesconfirmacao" id="caixaDeConfirmacao">Sim</div>
+        <div class="botoes2 botoesconfirmacao" id="caixaDeConfirmacaoFechar">Não</div>
+    </div>
     
     <div id="telaFinalizarPedido">
         <div id="telaFinalizarPedidoTexto"></div>
@@ -27,12 +32,22 @@
             <div class="botoes1" id="caixaTotal">R$ 0,00</div>
             <div class="botoes1" id="caixaTroco">R$ 0,00</div>
         </div>
-        <input placeholder="Digite o valor" onkeyup="calcularTroco()" type="number" name="inputPago" id="inputPago">
+        <input placeholder="Digite o valor" type="number" name="inputPago" id="inputPago">
         <div id="caixaBotoes">
-            <div onclick="fecharTela()" class="botoes2" id="botaoFechar"><p>Fechar</p></div>
-            <div onclick="salvarNoHistorico()" class="botoes2" id="botaoCalcular"><p>Salvar</p></div>
+            <div  class="botoes2" id="botaoFechar"><p>Fechar</p></div>
+            <div  class="botoes2" id="botaoCalcular"><p>Salvar</p></div>
         </div>
-        
+    </div>
+
+    <div id='caixaDeTexto'>
+        <p></p>
+        <div id='caixaDePreco'>R$ 0,00</div>
+    </div>
+
+    <div id="botoesDeControle">  
+        <div  class="botoes" id="resetar">Resetar</div>  
+        <div  class="botoes" id="finalizarPedido">Finalizar</div>  
+        <div  class="botoes" id="apagar">Apagar</div> 
     </div>
 
     <div id="container">

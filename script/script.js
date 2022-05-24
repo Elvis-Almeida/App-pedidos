@@ -7,66 +7,28 @@ function registerServiceWorker() {
         console.log('Service Worker falhou:', error);
       });
     }
-  }
-
-registerServiceWorker();
-
-let container = document.getElementById('container');
-let cardapio = [
-    ['Caldo',             2,   './images/alimentos/caldo.png'],
-    ['Canjica',           2,   './images/alimentos/canjica.png'],
-    ['Espetinho',         12,  './images/alimentos/espetinho.png'],
-    ['Galin. caip.',      13,  './images/alimentos/galinha_caip.png'],
-    ['Crepe',             2.5, './images/alimentos/crepe.png'],
-    ['Misto',             3,   './images/alimentos/misto.png'],
-    ['C. quente',         3,   './images/alimentos/cachorro_quente.png'],
-    ['Coca-cola',         10,  './images/alimentos/coca-cola.png'],
-    ['Fanta',             10,  './images/alimentos/fanta.png'],
-    ['Antarctica',         10,  './images/alimentos/guarana_antarctica.png'],
-    ['River',             7,   './images/alimentos/river.png'],
-    ['Copo refri',        2,   './images/alimentos/copo_de_refri.png'],
-    ['Copo suco',         2,   './images/alimentos/copo_de_suco.png'],
-    ['Torta doce',        3,   './images/alimentos/torta_doce.png'],
-    ['Salgado',           2,   './images/alimentos/salgados.png']
-]
-localStorage.setItem('totalPedido', 0);
-localStorage.setItem('historicoDeInserção', '');
-
-if (!localStorage.getItem('quantidadeDePedidos')) {
-    localStorage.setItem('quantidadeDePedidos', 1);
 }
 
-function listarPedido(pedido) {
+function criarbotoes(container, cardapio, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
+    let temp = '';
+    for (let i = 0; i < cardapio.length; i++) {
+        temp += "<div onclick='adicionarAoPedido(`"+ cardapio[i][0] +"`,"+ cardapio[i][1]  +",`"  +  idCaixaDeTextoDePedidos +"`,`" + idCaixaDePrecoDePedidos +"`)' class='bloco'>  <div class='blocoImagem' style='background-image: url(" + cardapio[i][2] + ");background-repeat: no-repeat;background-size: contain;'>  </div>  <div class='blocoTexto'>"+ cardapio[i][0] +"</div>  </div>";
+    }
+    container.innerHTML += temp + "<div id='espacoEmBrancoDeBaixo'></div>";
     
 }
 
-function adicionarAoPedido(Nome, preco){
-    console.log(Nome + ' ' + preco);
+function adicionarAoPedido(Nome, preco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos){
 
-    let caixaDeTexto = document.querySelector('#caixaDeTexto>p');
-    let caixaDePreco = document.getElementById('caixaDePreco');
+    let caixaDeTextoDePedidos = document.querySelector(idCaixaDeTextoDePedidos)
+    let caixaDePrecoDePedidos = document.querySelector(idCaixaDePrecoDePedidos)
+
+    console.log(Nome + ' ' + preco);
 
     let totalPagar = parseFloat(localStorage.getItem('totalPedido'));
     totalPagar += preco;
 
-    //para identificar se o numero é float ou inteiro
-    if (totalPagar % 1 === 0) {
-
-        caixaDePreco.textContent = 'R$ ' + totalPagar + ',00';
-
-    }else{
-
-        // para identificar se o numero tem 2 casas depois da vigula
-        if ((totalPagar * 10) % 1 === 0) {
-            
-            caixaDePreco.textContent = ('R$ ' + totalPagar + '0').replace('.', ',');
-
-        }else{
-
-            caixaDePreco.textContent = ('R$ ' + totalPagar).replace('.', ',');
-            
-        }
-    }
+    caixaDePrecoDePedidos.textContent = formatarNumero('', totalPagar, '');
 
     // criando histórco de inserção
     let historicoDeInserção = localStorage.getItem('historicoDeInserção')
@@ -75,54 +37,38 @@ function adicionarAoPedido(Nome, preco){
 
     localStorage.setItem('totalPedido', totalPagar);
 
-    if (caixaDeTexto.textContent == '') {
-        caixaDeTexto.textContent += Nome;
+    if (caixaDeTextoDePedidos.textContent == '') {
+        caixaDeTextoDePedidos.textContent += Nome;
     }else{
-        caixaDeTexto.textContent += ' + ' + Nome;
+        caixaDeTextoDePedidos.textContent += ' + ' + Nome;
     }
 }
 
-function fecharTela(){
-    document.getElementById('inputPago').value = '';
-    document.getElementById('telaFinalizarPedido').style.display = 'none';
-    document.getElementById('historico').style.display = 'none';
-    document.querySelector('#caixaTroco').textContent = 'R$ 0,00'
+function resetarPedidos(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos, idInputTroco, idCaixaDeTextoTroco){
+
+    document.querySelector(idCaixaDeTextoDePedidos).textContent='';
+    document.querySelector(idCaixaDePrecoDePedidos).textContent='R$ 0,00';
+
+    document.querySelector(idInputTroco           ).value = '';
+    document.querySelector(idCaixaDeTextoTroco    ).textContent = 'R$ 0,00';
+
+    localStorage.setItem('historicoDeInserção', '')
+    localStorage.setItem('totalPedido', 0);
+
 }
 
-function finalizarPedido(){
-    document.getElementById('telaFinalizarPedido').style.display = 'block'
-    let caixaDeTexto = document.querySelector('#caixaDeTexto>p');
-    let totalPagar = parseFloat(localStorage.getItem('totalPedido'));
-    let telaTotal = document.getElementById('caixaTotal');
-    let texto = caixaDeTexto.textContent.split(' + ');
-
-    //para identificar se o numero é float ou inteiro
-    if (totalPagar % 1 === 0) {
-
-        telaTotal.textContent = 'R$ ' + totalPagar + ',00';
-
-    }else{
-
-        // para identificar se o numero tem 2 casas depois da vigula
-        if ((totalPagar * 10) % 1 === 0) {
-            
-            telaTotal.textContent = ('R$ ' + totalPagar + '0').replace('.', ',');
-
-        }else{
-
-            telaTotal.textContent = ('R$ ' + totalPagar).replace('.', ',');
-            
-        }
-    }
+function formatarTextoDePedidos(texto) {
+    texto      = texto.split(' + ');
 
     // Para mostar uma lista com a quantidade de pedidos
-    let quantidadeDeComidaTemp = {}
-    let quantidadeDeComida = []
+
+    let quantidadeDeComidaTemp = {};
+    let quantidadeDeComida = [];
 
     for (let i = 0; i < texto.length; i++) {
         if (!quantidadeDeComidaTemp[texto[i]]) {
             quantidadeDeComidaTemp[texto[i]] = texto.filter(x => x === texto[i]).length;
-            quantidadeDeComida.push([texto[i], quantidadeDeComidaTemp[texto[i]]])
+            quantidadeDeComida.push([texto[i], quantidadeDeComidaTemp[texto[i]]]);
         } 
     }
 
@@ -131,35 +77,38 @@ function finalizarPedido(){
         temp += quantidadeDeComida[i][1] + ' - ' + quantidadeDeComida[i][0] + ' <br> ';
     }
 
-    document.getElementById('telaFinalizarPedidoTexto').innerHTML = temp;
-}
-    
-    
-
-function resetarPedidos(){
-    let caixaDeTexto = document.querySelector('#caixaDeTexto>p');
-    let caixaDePreco = document.getElementById('caixaDePreco');
-    caixaDeTexto.textContent='';
-    caixaDePreco.textContent='R$ 0,00';
-    localStorage.setItem('totalPedido', 0);
-    document.getElementById('inputPago').value = '';
-    document.querySelector('#caixaTroco').textContent = 'R$ 0,00';
-    localStorage.setItem('historicoDeInserção', '')
-
+    return temp;
 }
 
-function apagarPedido(){
+function finalizarPedido(idTelaFinalizarPedido, idCaixaDeTextoDePedidos, idCaixaTotal, idTelaFinalizarPedidoTexto){
     
+    let telaFinalizarPedido      = document.querySelector(idTelaFinalizarPedido);
+    let caixaDeTexto             = document.querySelector(idCaixaDeTextoDePedidos);
+    let telaTotal                = document.querySelector(idCaixaTotal);
+    let telaFinalizarPedidoTexto = document.querySelector(idTelaFinalizarPedidoTexto);
     let totalPagar = parseFloat(localStorage.getItem('totalPedido'));
-    let caixaDePreco = document.getElementById('caixaDePreco');
-    let caixaDeTexto = document.querySelector('#caixaDeTexto>p');
-    let historicoDeInsercao = localStorage.getItem('historicoDeInserção')
-    let textoCortado = caixaDeTexto.textContent
+
+    telaFinalizarPedido.style.display = 'block';
+    telaTotal.textContent             = formatarNumero('', totalPagar, '');
+
+    telaFinalizarPedidoTexto.innerHTML = formatarTextoDePedidos(caixaDeTexto.textContent);
+
+}
+
+function apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos){
+    
+    let totalPagar          = parseFloat(localStorage.getItem('totalPedido'));
+    let historicoDeInsercao = localStorage.getItem('historicoDeInserção');
+
+    let caixaDePreco = document.querySelector(idCaixaDePrecoDePedidos);
+    let caixaDeTexto = document.querySelector(idCaixaDeTextoDePedidos);
+    
+    let textoCortado = caixaDeTexto.textContent;
     let textoTemp1;
     let textoTemp2='';
-    let ultimoValor
+    let ultimoValor;
 
-    
+    // separando a lista para poder remover o ultimo item
     textoCortado = textoCortado.split(' + ')
     textoTemp1 = textoCortado.slice(0, textoCortado.length - 1);
 
@@ -172,82 +121,86 @@ function apagarPedido(){
         }
     }
 
+    // apagando o ultimo item da lista
     historicoDeInsercao = historicoDeInsercao.split(',');
     ultimoValor = historicoDeInsercao.slice(historicoDeInsercao.length - 1);
     localStorage.setItem('historicoDeInserção', historicoDeInsercao.slice(0, historicoDeInsercao.length - 1))
+    
     console.log(ultimoValor);
 
+    // apagando o ultimo valor da lista
     totalPagar -= ultimoValor;
     localStorage.setItem('totalPedido', totalPagar);
-    
-    //para identificar se o numero é float ou inteiro
-    if (totalPagar % 1 === 0) {
 
-        caixaDePreco.textContent = 'R$ ' + totalPagar + ',00';
-
-    }else{
-
-        // para identificar se o numero tem 2 casas depois da vigula
-        if ((totalPagar * 10) % 1 === 0) {
-            
-            caixaDePreco.textContent = ('R$ ' + totalPagar + '0').replace('.', ',');
-
-        }else{
-
-            caixaDePreco.textContent = ('R$ ' + totalPagar).replace('.', ',');
-            
-        }
-    }
-    // caixaDePreco.textContent = 'R$ ' + totalPagar + ',00';
-    
+    caixaDePreco.textContent = formatarNumero('', totalPagar, '')
     caixaDeTexto.textContent = textoTemp2;
     
 }
 
-function criarbotoes(container, cardapio) {
-    for (let i = 0; i < cardapio.length; i++) {
-        container.innerHTML += "<div onclick='adicionarAoPedido(`"+ cardapio[i][0] +"`,"+ cardapio[i][1] +")' class='bloco'>  <div class='blocoImagem' style='background-image: url(" + cardapio[i][2] + ");background-repeat: no-repeat;background-size: contain;'>  </div>  <div class='blocoTexto'>"+ cardapio[i][0] +"</div>  </div>";
-    }
-    container.innerHTML += "<div id='espacoEmBrancoDeBaixo'></div>";
-    container.innerHTML += "<div id='caixaDeTexto'><p></p><div id='caixaDePreco'>R$ 0,00</div></div>";
-    container.innerHTML +=' <div id="botoesDeControle">  <div onclick="resetarPedidos()" class="botoes" id="resetar">Resetar</div>  <div onclick="finalizarPedido()" class="botoes" id="finalizarPedido">Finalizar</div>  <div onclick="apagarPedido()" class="botoes" id="apagar">Apagar</div>  </div>'
-
+function fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco){
+    document.querySelector(idInputTroco).value = '';
+    document.querySelector(idTelaFinalizarPedido).style.display = 'none';
+    document.querySelector(idCaixaHistorico).style.display = 'none';
+    document.querySelector(idCaixaDeTextoTroco).textContent = 'R$ 0,00'
 }
 
-function salvarNoHistorico() {
-    if (document.getElementById('telaFinalizarPedidoTexto').innerHTML != '1 -  <br> ') {
-        let totalPagar = parseFloat(localStorage.getItem('totalPedido'));
-        let quantidadeDePedidos = parseInt(localStorage.getItem('quantidadeDePedidos')) 
-        let listaPedido = localStorage.getItem('historicoDePedidos');
-        listaPedido += '-------- '+ quantidadeDePedidos +' -------- <br> ';
-        listaPedido += document.getElementById('telaFinalizarPedidoTexto').innerHTML;
-        
-        //para identificar se o numero é float ou inteiro
-        if (totalPagar % 1 === 0) {
+function formatarNumero(prefixo ,numero, sufixo) {
+    //para identificar se o numero é float ou inteiro
+    if (numero % 1 === 0) {
 
-            listaPedido += 'Total = R$ ' + totalPagar + ',00 <br> ';
+        return prefixo + 'R$ ' + numero + ',00' + sufixo;
+
+    }else{
+
+        // para identificar se o numero tem 2 casas depois da vigula
+        if ((numero * 10) % 1 === 0) {
+            
+            return prefixo + ('R$ ' + numero + '0').replace('.', ',')  + sufixo;
 
         }else{
 
-            // para identificar se o numero tem 2 casas depois da vigula
-            if ((totalPagar * 10) % 1 === 0) {
-                
-                listaPedido += ('Total = R$ ' + totalPagar + '0 <br>').replace('.', ',');
-
-            }else{
-
-                listaPedido += ('Total = R$ ' + totalPagar + ' <br> ').replace('.', ',');
-                
-            }
+            return prefixo + ('R$ ' + numero + '').replace('.', ',')  + sufixo;
+            
         }
-        
-        console.log(listaPedido);
+    }
+}
+
+function salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
+    if (document.querySelector(idTelaFinalizarPedidoTexto).innerHTML != '1 -  <br> ') {
+        let totalPagar          = parseFloat(localStorage.getItem('totalPedido'));
+        let quantidadeDePedidos = parseInt(localStorage.getItem('quantidadeDePedidos')) 
+        let listaPedido         = localStorage.getItem('historicoDePedidos');
+        let caixaDeTexto             = document.querySelector(idCaixaDeTextoDePedidos).textContent;
+        let historicoResumo;
+        let totalGeral          = parseFloat(localStorage.getItem('totalGeral'));
+
+        console.log(totalGeral+" AEEEEEEEEEE");
+        historicoResumo = localStorage.getItem('historicoResumo');
+        console.log(totalPagar);
+        totalGeral += totalPagar;
+
+        if (historicoResumo == '') {
+            historicoResumo += caixaDeTexto;
+        }
+        else{
+            historicoResumo += ' + ' + caixaDeTexto;
+        }
+
+        localStorage.setItem('totalGeral', totalGeral);
+        localStorage.setItem('historicoResumo', historicoResumo);
+
+        listaPedido += '-------- '+ quantidadeDePedidos +' -------- <br> ';
+        listaPedido += document.querySelector(idTelaFinalizarPedidoTexto).innerHTML;
+
+        listaPedido += formatarNumero('Total = ', totalPagar, ' <br> ');
         localStorage.setItem('historicoDePedidos', listaPedido);
 
         quantidadeDePedidos++;
         localStorage.setItem('quantidadeDePedidos', quantidadeDePedidos)
-        fecharTela();
-        resetarPedidos();  
+        
+
+        fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco);
+        resetarPedidos(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos, idInputTroco, idCaixaDeTextoTroco);  
     } 
 }
 
@@ -256,18 +209,20 @@ function exibirHistorico() {
     document.getElementById('textoHistorico').innerHTML = localStorage.getItem('historicoDePedidos') +' <br> .'
 }
 
-function calcularTroco() {
-    let totalPagar = parseFloat(localStorage.getItem('totalPedido'));
-    let valorRecebido = document.getElementById('inputPago').value;
-    let caixaTroco = document.querySelector('#caixaTroco');
+function calcularTroco(idInputTroco, idCaixaDeTextoTroco,  idTelaFinalizarPedido, idCaixaHistorico) {
+    
+    let totalPagar    = parseFloat(localStorage.getItem('totalPedido'));
+    let valorRecebido = document.querySelector(idInputTroco).value;
+    let caixaTroco    = document.querySelector(idCaixaDeTextoTroco);
 
     if (valorRecebido == '4321') {
-        fecharTela();
+        fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco);
         exibirHistorico();
     }
     if (valorRecebido == '0000000000000') {
         localStorage.setItem('quantidadeDePedidos', 1);
         localStorage.setItem('historicoDePedidos', '');
+        localStorage.setItem('historicoResumo', '');
         alert('Histórico Resetado');
     }
 
@@ -278,42 +233,103 @@ function calcularTroco() {
         caixaTroco.style.color = '#86d9ff'
     }
 
-    //para identificar se o numero é float ou inteiro
-    if (totalPagar % 1 === 0) {
-
-        caixaTroco.textContent = 'R$ ' + totalPagar*-1 + ',00';
-
-    }else{
-
-        // para identificar se o numero tem 2 casas depois da vigula
-        if ((totalPagar * 10) % 1 === 0) {
-            
-            caixaTroco.textContent = ('R$ ' + totalPagar*-1 + '0').replace('.', ',');
-
-        }else{
-
-            caixaTroco.textContent = ('R$ ' + totalPagar*-1).replace('.', ',');
-            
-        }
-    }
-
+    caixaTroco.textContent = formatarNumero('', totalPagar*-1, '');
 
 }
 
-function download(filename, textInput) {
-    let element = document.getElementById("botaoDownload");
-    element.setAttribute('href','data:text/plain;charset=utf-8, ' + encodeURIComponent(textInput));
-    element.setAttribute('download', filename);
-    // element.click();
-    //document.body.removeChild(element);
+function gerarHistoricoResumido() {
+    let totalGeral = parseFloat(localStorage.getItem('totalGeral'));
+    return formatarTextoDePedidos(localStorage.getItem('historicoResumo')) + " <br> Total = " + formatarNumero('',totalGeral,'');
 }
-document.getElementById("botaoDownload")
-    .addEventListener("click", function () {
-          var text = document.getElementById("textoHistorico").innerHTML;
-          var filename = "Historico_de_pedidos.txt";
-          download(filename, text.replace(/<br>/g, '\n'));
-    }, false);
 
 
-criarbotoes(container, cardapio);
 
+// ------------- principal -------------
+let container = document.getElementById('container');
+let cardapio = [
+    ['Caldo',             2,   './images/alimentos/caldo.png'],
+    ['Canjica',           2,   './images/alimentos/canjica.png'],
+    ['Espetinho',         12,  './images/alimentos/espetinho.png'],
+    ['Galin. caip.',      13,  './images/alimentos/galinha_caip.png'],
+    ['Crepe',             2.5, './images/alimentos/crepe.png'],
+    ['Misto',             3,   './images/alimentos/misto.png'],
+    ['C. quente',         3,   './images/alimentos/cachorro_quente.png'],
+    ['Coca-cola',         10,  './images/alimentos/coca-cola.png'],
+    ['Fanta',             10,  './images/alimentos/fanta.png'],
+    ['Antarctica',        10,  './images/alimentos/guarana_antarctica.png'],
+    ['River',             7,   './images/alimentos/river.png'],
+    ['Copo refri',        2,   './images/alimentos/copo_de_refri.png'],
+    ['Copo suco',         2,   './images/alimentos/copo_de_suco.png'], 
+    ['Torta doce',        3,   './images/alimentos/torta_doce.png'],
+    ['Salgado',           2,   './images/alimentos/salgados.png']
+]
+
+// Id caixas de textos principais
+let idCaixaDeTextoDePedidos    = "#caixaDeTexto>p";
+let idCaixaDePrecoDePedidos    = "#caixaDePreco";
+
+// Id caixas de textos tela finalizar pedido
+let idInputTroco               = "#inputPago";
+let idCaixaDeTextoTroco        = "#caixaTroco";
+let idTelaFinalizarPedido      = "#telaFinalizarPedido";
+let idCaixaTotal               = "#caixaTotal";
+let idTelaFinalizarPedidoTexto = "#telaFinalizarPedidoTexto"
+
+// Id caixa tela histórico
+let idCaixaHistorico           = "#historico"
+let idCaixaHistoricoTexto      = "#textoHistorico"
+
+// Id botões pricipais 
+let idBotaoResetar             = "#resetar";
+let idBotaoFinalizarPedido     = "#finalizarPedido";
+let idBotaoApagar              = "#apagar";
+
+// Id botões tela finalizar pedidos
+let idBotaoFecharTelaDePedidos = "#botaoFechar";
+let idBotaoSalvarNoHistorico   = "#botaoCalcular";
+
+// Id botões tela histórico
+let idBotaoFecharHistorico       = "#botaoFecharHistorico";
+let idBotaoDownload              = "#botaoDownload"
+
+// adcionando eventos nos botões
+document.querySelector(idBotaoResetar).addEventListener(           "click", function() {    resetarPedidos(   idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos, idInputTroco, idCaixaDeTextoTroco)   });
+document.querySelector(idBotaoFinalizarPedido).addEventListener(   "click", function() {    finalizarPedido(  idTelaFinalizarPedido, idCaixaDeTextoDePedidos, idCaixaTotal, idTelaFinalizarPedidoTexto)  });
+document.querySelector(idBotaoApagar).addEventListener(            "click", function() {    apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos)     });
+
+document.querySelector(idBotaoFecharHistorico).addEventListener(     "click", function() {    fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco)     });
+document.querySelector(idBotaoFecharTelaDePedidos).addEventListener( "click", function() {    fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco)     });
+document.querySelector(idBotaoSalvarNoHistorico).addEventListener(   "click", function() {    salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos)     });
+
+// adicionando evento de calcular no input
+document.querySelector(idInputTroco).addEventListener(   "keyup", function() {    calcularTroco(idInputTroco, idCaixaDeTextoTroco,  idTelaFinalizarPedido, idCaixaHistorico)     });
+
+// adicionando função de download do histórico
+document.querySelector(idBotaoDownload).addEventListener('click', function() {
+    let text = document.querySelector(idCaixaHistoricoTexto).innerHTML;
+    let textoResumo = gerarHistoricoResumido();
+    let resumo = document.createElement("a");
+
+    resumo.setAttribute('href','data:text/plain;charset=utf-8, ' + encodeURIComponent(textoResumo.replace(/<br>/g, '\n')));
+    resumo.setAttribute('download', "Historico_resumo.txt");
+    resumo.click();
+    resumo.remove();
+
+    this.setAttribute('href','data:text/plain;charset=utf-8, ' + encodeURIComponent(text.replace(/<br>/g, '\n')));
+    this.setAttribute('download', "Historico_de_pedidos.txt");
+});
+
+// ------------------ funções -------------------
+localStorage.setItem('totalPedido', 0);
+localStorage.setItem('historicoDeInserção', '');
+
+if (!localStorage.getItem('quantidadeDePedidos')) {
+    localStorage.setItem('quantidadeDePedidos', 1);
+}   
+if (!localStorage.getItem("historicoResumo")) {
+    localStorage.setItem("historicoResumo", '');
+    localStorage.setItem('totalGeral', 0);
+}
+
+criarbotoes(container, cardapio, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos);
+registerServiceWorker();
