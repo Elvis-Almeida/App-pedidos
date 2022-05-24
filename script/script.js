@@ -166,7 +166,7 @@ function formatarNumero(prefixo ,numero, sufixo) {
 }
 
 function salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
-    if (document.querySelector(idTelaFinalizarPedidoTexto).innerHTML != '1 -  <br> ') {
+    
         let totalPagar          = parseFloat(localStorage.getItem('totalPedido'));
         let quantidadeDePedidos = parseInt(localStorage.getItem('quantidadeDePedidos')) 
         let listaPedido         = localStorage.getItem('historicoDePedidos');
@@ -201,7 +201,7 @@ function salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinal
 
         fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco);
         resetarPedidos(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos, idInputTroco, idCaixaDeTextoTroco);  
-    } 
+     
 }
 
 function exibirHistorico() {
@@ -223,6 +223,8 @@ function calcularTroco(idInputTroco, idCaixaDeTextoTroco,  idTelaFinalizarPedido
         localStorage.setItem('quantidadeDePedidos', 1);
         localStorage.setItem('historicoDePedidos', '');
         localStorage.setItem('historicoResumo', '');
+        localStorage.setItem('totalGeral', 0);
+
         alert('Histórico Resetado');
     }
 
@@ -292,6 +294,12 @@ let idBotaoSalvarNoHistorico   = "#botaoCalcular";
 let idBotaoFecharHistorico       = "#botaoFecharHistorico";
 let idBotaoDownload              = "#botaoDownload"
 
+// Id caixa de confirmação
+let caixaDeConfirmacaoDeSalvamento = "#caixaDeConfirmacaoDeSalvamento"
+let textoDeConfirmacao             = "#textoDeConfirmacao";
+let caixaDeConfirmacao             = "#caixaDeConfirmacao";
+let caixaDeConfirmacaoFechar       = "#caixaDeConfirmacaoFechar";
+
 // adcionando eventos nos botões
 document.querySelector(idBotaoResetar).addEventListener(           "click", function() {    resetarPedidos(   idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos, idInputTroco, idCaixaDeTextoTroco)   });
 document.querySelector(idBotaoFinalizarPedido).addEventListener(   "click", function() {    finalizarPedido(  idTelaFinalizarPedido, idCaixaDeTextoDePedidos, idCaixaTotal, idTelaFinalizarPedidoTexto)  });
@@ -299,7 +307,11 @@ document.querySelector(idBotaoApagar).addEventListener(            "click", func
 
 document.querySelector(idBotaoFecharHistorico).addEventListener(     "click", function() {    fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco)     });
 document.querySelector(idBotaoFecharTelaDePedidos).addEventListener( "click", function() {    fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco)     });
-document.querySelector(idBotaoSalvarNoHistorico).addEventListener(   "click", function() {    salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos)     });
+document.querySelector(idBotaoSalvarNoHistorico).addEventListener(   "click", function() {   if (document.querySelector(idTelaFinalizarPedidoTexto).innerHTML != '1 -  <br> ') { document.querySelector(caixaDeConfirmacaoDeSalvamento).style.display = 'block' }    });
+document.querySelector(caixaDeConfirmacaoFechar).addEventListener(   "click", function() {    document.querySelector(caixaDeConfirmacaoDeSalvamento).style.display = 'none'  });
+document.querySelector(caixaDeConfirmacao).addEventListener(         "click", function() {    salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos);document.querySelector(caixaDeConfirmacaoDeSalvamento).style.display = 'none'    });
+
+// document.querySelector(idBotaoSalvarNoHistorico).addEventListener(   "click", function() {    salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos)     });
 
 // adicionando evento de calcular no input
 document.querySelector(idInputTroco).addEventListener(   "keyup", function() {    calcularTroco(idInputTroco, idCaixaDeTextoTroco,  idTelaFinalizarPedido, idCaixaHistorico)     });
@@ -310,13 +322,17 @@ document.querySelector(idBotaoDownload).addEventListener('click', function() {
     let textoResumo = gerarHistoricoResumido();
     let resumo = document.createElement("a");
 
-    resumo.setAttribute('href','data:text/plain;charset=utf-8, ' + encodeURIComponent(textoResumo.replace(/<br>/g, '\n')));
-    resumo.setAttribute('download', "Historico_resumo.txt");
-    resumo.click();
-    resumo.remove();
-
     this.setAttribute('href','data:text/plain;charset=utf-8, ' + encodeURIComponent(text.replace(/<br>/g, '\n')));
     this.setAttribute('download', "Historico_de_pedidos.txt");
+
+    resumo.setAttribute('href','data:text/plain;charset=utf-8, ' + encodeURIComponent(textoResumo.replace(/<br>/g, '\n')));
+    resumo.setAttribute('download', "Historico_resumo.txt");
+
+    setTimeout(() => {
+        resumo.click();
+        resumo.remove();
+    }, 5000);
+    
 });
 
 // ------------------ funções -------------------
@@ -327,9 +343,12 @@ if (!localStorage.getItem('quantidadeDePedidos')) {
     localStorage.setItem('quantidadeDePedidos', 1);
 }   
 if (!localStorage.getItem("historicoResumo")) {
+    localStorage.setItem('historicoDePedidos', '');
     localStorage.setItem("historicoResumo", '');
     localStorage.setItem('totalGeral', 0);
 }
 
 criarbotoes(container, cardapio, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos);
 registerServiceWorker();
+
+//adicionar data e hora nos pedidos feitos;
