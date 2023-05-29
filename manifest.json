@@ -4,13 +4,13 @@
   "description": "App de controle e manuseio de pedidos",
   "icons": [
     {
-      "src": "https://github.com/Elvis-Almeida/App-pedidos/blob/main/images/iconeApp.png",
+      "src": "https://i.ibb.co/8rq786J/iconeApp.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose":"any maskable"
     },
     {
-      "src": "https://github.com/Elvis-Almeida/App-pedidos/blob/main/images/iconeApp.png",
+      "src": "https://i.ibb.co/8rq786J/iconeApp.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose":"any maskable"
@@ -27,7 +27,7 @@
       "name": "SCJ - Pedidos",
       "description": "App de controle e manuseio de pedidos",
       "url": "?source=pwa",
-      "icons": [{ "src": "https://github.com/Elvis-Almeida/App-pedidos/blob/main/images/iconeApp.png", "sizes": "192x192" }]
+      "icons": [{ "src": "https://i.ibb.co/8rq786J/iconeApp.png", "sizes": "192x192" }]
     }
   ]
 
