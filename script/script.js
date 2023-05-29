@@ -230,7 +230,7 @@ function exibirHistorico() {
 function calcularTroco(idInputTroco, idCaixaDeTextoTroco,  idTelaFinalizarPedido, idCaixaHistorico) {
     
     let totalPagar    = parseFloat(localStorage.getItem('totalPedido'));
-    let valorRecebido = document.querySelector(idInputTroco).value;
+    let valorRecebido = document.querySelector(idInputTroco).value.replace(/[^0-9]/g, '');
     let caixaTroco    = document.querySelector(idCaixaDeTextoTroco);
 
     if (valorRecebido == '4321') {
