@@ -3,7 +3,7 @@ var listaCaixaDeTexto = []
 function registerServiceWorker() {
     // registrando o service worker para navegadores com suporte
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('../sw.js', { scope: '../' }).then(() => {
+      navigator.serviceWorker.register('https://github.com/Elvis-Almeida/App-pedidos/blob/1e7fd1a13471026f82afba25b5dfee983cd7152c/sw.js', { scope: '../' }).then(() => {
         console.log('Service Worker registrado com sucesso.');
       }).catch(error => {
         console.log('Service Worker falhou:', error);
