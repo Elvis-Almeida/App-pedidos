@@ -1,3 +1,5 @@
+var listaCaixaDeTexto = []
+
 function registerServiceWorker() {
     // registrando o service worker para navegadores com suporte
     if ('serviceWorker' in navigator) {
@@ -9,6 +11,21 @@ function registerServiceWorker() {
     }
 }
 
+let timerId;
+
+function startTimer(event) {
+  // Inicia o timer quando o botão do mouse ou toque começa
+  timerId = setTimeout(function() {
+    console.log('Botão/touch foi mantido pressionado por mais de 3 segundos!');
+    // Insira aqui o código que deseja executar após o tempo especificado
+  }, 3000);
+}
+
+function stopTimer(event) {
+  // Cancela o timer se o botão do mouse ou toque for solto antes do tempo especificado
+  clearTimeout(timerId);
+}
+
 function criarbotoes(container, cardapio, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
     let temp = '';
     for (let i = 0; i < cardapio.length; i++) {
@@ -18,12 +35,44 @@ function criarbotoes(container, cardapio, idCaixaDeTextoDePedidos, idCaixaDePrec
     
 }
 
+// cria string para caixa de texto
+function formatarLista(lista, quebrarlinha = false) {
+    let resultado = '';
+    let produtos = {};
+  
+    for (let i = 0; i < lista.length; i++) {
+        const produto = lista[i];
+        if (produtos.hasOwnProperty(produto)) {
+            produtos[produto]++;
+        } else {
+            produtos[produto] = 1;
+        }
+    }
+    
+    c=0
+    for (let produto in produtos) {
+        if (c == 0) {
+            resultado += `${produtos[produto]} ${produto}`;
+        }else{
+            resultado += ` ${produtos[produto]} ${produto}`;
+        }
+        c = 1
+        if (quebrarlinha) {
+            resultado += '<br>';
+        }
+    }
+    console.log(resultado);
+  
+    return resultado;
+}
+
 function adicionarAoPedido(Nome, preco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos){
 
     let caixaDeTextoDePedidos = document.querySelector(idCaixaDeTextoDePedidos)
     let caixaDePrecoDePedidos = document.querySelector(idCaixaDePrecoDePedidos)
 
     console.log(Nome + ' ' + preco);
+    listaCaixaDeTexto.push(Nome)
 
     let totalPagar = parseFloat(localStorage.getItem('totalPedido'));
     totalPagar += preco;
@@ -34,14 +83,11 @@ function adicionarAoPedido(Nome, preco, idCaixaDeTextoDePedidos, idCaixaDePrecoD
     let historicoDeInserção = localStorage.getItem('historicoDeInserção')
     historicoDeInserção += ',' + preco;
     localStorage.setItem('historicoDeInserção', historicoDeInserção);
-
     localStorage.setItem('totalPedido', totalPagar);
 
-    if (caixaDeTextoDePedidos.textContent == '') {
-        caixaDeTextoDePedidos.textContent += Nome;
-    }else{
-        caixaDeTextoDePedidos.textContent += ' + ' + Nome;
-    }
+    // add texto caixa de texto
+    
+    caixaDeTextoDePedidos.textContent = formatarLista(listaCaixaDeTexto)
 }
 
 function resetarPedidos(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos, idInputTroco, idCaixaDeTextoTroco){
@@ -52,32 +98,11 @@ function resetarPedidos(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos, idInpu
     document.querySelector(idInputTroco           ).value = '';
     document.querySelector(idCaixaDeTextoTroco    ).textContent = 'R$ 0,00';
 
+    listaCaixaDeTexto = []
+
     localStorage.setItem('historicoDeInserção', '')
     localStorage.setItem('totalPedido', 0);
 
-}
-
-function formatarTextoDePedidos(texto) {
-    texto      = texto.split(' + ');
-
-    // Para mostar uma lista com a quantidade de pedidos
-
-    let quantidadeDeComidaTemp = {};
-    let quantidadeDeComida = [];
-
-    for (let i = 0; i < texto.length; i++) {
-        if (!quantidadeDeComidaTemp[texto[i]]) {
-            quantidadeDeComidaTemp[texto[i]] = texto.filter(x => x === texto[i]).length;
-            quantidadeDeComida.push([texto[i], quantidadeDeComidaTemp[texto[i]]]);
-        } 
-    }
-
-    let temp = '';
-    for (let i = 0; i < quantidadeDeComida.length; i++) { 
-        temp += quantidadeDeComida[i][1] + ' - ' + quantidadeDeComida[i][0] + ' <br> ';
-    }
-
-    return temp;
 }
 
 function finalizarPedido(idTelaFinalizarPedido, idCaixaDeTextoDePedidos, idCaixaTotal, idTelaFinalizarPedidoTexto){
@@ -91,8 +116,7 @@ function finalizarPedido(idTelaFinalizarPedido, idCaixaDeTextoDePedidos, idCaixa
     telaFinalizarPedido.style.display = 'block';
     telaTotal.textContent             = formatarNumero('', totalPagar, '');
 
-    telaFinalizarPedidoTexto.innerHTML = formatarTextoDePedidos(caixaDeTexto.textContent);
-
+    telaFinalizarPedidoTexto.innerHTML = formatarLista(listaCaixaDeTexto, true);
 }
 
 function apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos){
@@ -103,24 +127,6 @@ function apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos){
     let caixaDePreco = document.querySelector(idCaixaDePrecoDePedidos);
     let caixaDeTexto = document.querySelector(idCaixaDeTextoDePedidos);
     
-    let textoCortado = caixaDeTexto.textContent;
-    let textoTemp1;
-    let textoTemp2='';
-    let ultimoValor;
-
-    // separando a lista para poder remover o ultimo item
-    textoCortado = textoCortado.split(' + ')
-    textoTemp1 = textoCortado.slice(0, textoCortado.length - 1);
-
-    for (let i = 0; i < textoTemp1.length; i++) {
-        if (i==0) {
-        textoTemp2 += textoTemp1[i]
-            
-        }else{
-            textoTemp2 += ' + ' + textoTemp1[i]
-        }
-    }
-
     // apagando o ultimo item da lista
     historicoDeInsercao = historicoDeInsercao.split(',');
     ultimoValor = historicoDeInsercao.slice(historicoDeInsercao.length - 1);
@@ -133,8 +139,8 @@ function apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos){
     localStorage.setItem('totalPedido', totalPagar);
 
     caixaDePreco.textContent = formatarNumero('', totalPagar, '')
-    caixaDeTexto.textContent = textoTemp2;
-    
+    listaCaixaDeTexto.pop()
+    caixaDeTexto.textContent = formatarLista(listaCaixaDeTexto);   
 }
 
 function fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco){
@@ -270,21 +276,20 @@ function gerarHistoricoResumido() {
 // ------------- principal -------------
 let container = document.getElementById('container');
 let cardapio = [
-    ['Caldo',             2,   './images/alimentos/caldo.png'],
-    ['Canjica',           2,   './images/alimentos/canjica.png'],
-    ['Espetinho',         12,  './images/alimentos/espetinho.png'],
-    ['Galin. caip.',      13,  './images/alimentos/galinha_caip.png'],
-    ['Crepe',             2.5, './images/alimentos/crepe.png'],
-    ['Misto',             3,   './images/alimentos/misto.png'],
+    ['Caldo',             3,   './images/alimentos/caldo.png'],
+    ['Canjica',           3,   './images/alimentos/canjica.png'],
+    ['Espetinho',         15,  './images/alimentos/espetinho.png'],
+    ['Galin. caip.',      15,  './images/alimentos/galinha_caip.png'],
+    ['Crepe',             3,   './images/alimentos/crepe.png'],
+    ['Misto',             4,   './images/alimentos/misto.png'],
     ['C. quente',         3,   './images/alimentos/cachorro_quente.png'],
-    ['Coca-cola',         10,  './images/alimentos/coca-cola.png'],
-    ['Fanta',             10,  './images/alimentos/fanta.png'],
-    ['Antarctica',        10,  './images/alimentos/guarana_antarctica.png'],
+    ['Coca-cola',         12,  './images/alimentos/coca-cola.png'],
+    ['Fanta',             12,  './images/alimentos/fanta.png'],
+    ['Antarctica',        12,  './images/alimentos/guarana_antarctica.png'],
     ['River',             7,   './images/alimentos/river.png'],
     ['Copo refri',        2,   './images/alimentos/copo_de_refri.png'],
     ['Copo suco',         2,   './images/alimentos/copo_de_suco.png'], 
-    ['Torta doce',        3,   './images/alimentos/torta_doce.png'],
-    ['Salgado',           2,   './images/alimentos/salgados.png']
+    ['Salgado',           3,   './images/alimentos/salgados.png']
 ]
 
 // Id caixas de textos principais

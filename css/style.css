@@ -5,10 +5,13 @@
     padding: 0px;
 }
 body{
-    background-color: #131516;
+    background-color: #272727;
     color: aliceblue;
     font-size: 10vw;
     font-family: 'Open Sans', sans-serif;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
 }
 
@@ -20,18 +23,21 @@ body{
 
 #caixaDeTexto{
     position: fixed;
-    background-color: #363636;
+    background-color: #363636ba;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     width: 100%;
     height: 40vw;
     top: 0px;
     border-radius: 0px 0px 10vw 0px;
     /* border: 2.5vw groove #944545; */
-    border: 2.5vw groove #45946e;
     box-sizing: border-box;
     overflow: hidden;
     font-size: 6vw;
     z-index: 1;
     /* text-align: justify; */
+    padding: 10px;
+    padding-left: 15px;
 }
 #caixaDePreco{
     position: absolute;
@@ -41,10 +47,10 @@ body{
     bottom: -6%;
     right: -4%;
     border-radius: 7vw 0px 0px 0px;
-    border: 2vw  groove #45946e;
+    /* border: 2vw  groove #45946e; */
     box-sizing: border-box;
-    padding-left: 2%;
-    padding-top: 1.5%;
+    padding-left: 20px;
+    padding-top: 10px;
 }
 
 /* ----------------- Espaço em branco superior ----------------- */
@@ -92,7 +98,9 @@ body{
 
 #botoesDeControle{
     position: fixed;
-    background-color: #323232;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    background-color: #32323272;
     bottom: 0px;
     width: 100%;
     height: 18vw;
