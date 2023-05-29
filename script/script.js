@@ -13,25 +13,29 @@ function registerServiceWorker() {
 
 let timerId;
 
-function startTimer(event) {
-  // Inicia o timer quando o botão do mouse ou toque começa
-  timerId = setTimeout(function() {
+function startTimer(bloco) {
+    console.log('clicou');
+    timerId = setTimeout(function() {
+    bloco.style.width = '0px'
+    bloco.style.height = '0px'
+    bloco.children[1].style.fontSize = '0px'
+    setTimeout(() => {
+        bloco.remove()
+    }, 500);
     console.log('Botão/touch foi mantido pressionado por mais de 3 segundos!');
-    // Insira aqui o código que deseja executar após o tempo especificado
   }, 3000);
 }
 
-function stopTimer(event) {
-  // Cancela o timer se o botão do mouse ou toque for solto antes do tempo especificado
+function stopTimer() {
   clearTimeout(timerId);
 }
 
 function criarbotoes(container, cardapio, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
     let temp = '';
     for (let i = 0; i < cardapio.length; i++) {
-        temp += "<div onclick='adicionarAoPedido(`"+ cardapio[i][0] +"`,"+ cardapio[i][1]  +",`"  +  idCaixaDeTextoDePedidos +"`,`" + idCaixaDePrecoDePedidos +"`)' class='bloco'>  <div class='blocoImagem' style='background-image: url(" + cardapio[i][2] + ");background-repeat: no-repeat;background-size: contain;'>  </div>  <div class='blocoTexto'>"+ cardapio[i][0] +"</div>  </div>";
+        temp += "<div ontouchstart='startTimer(this)' ontouchend='stopTimer()' onclick='adicionarAoPedido(`"+ cardapio[i][0] +"`,"+ cardapio[i][1]  +",`"  +  idCaixaDeTextoDePedidos +"`,`" + idCaixaDePrecoDePedidos +"`)' class='bloco'>  <div class='blocoImagem' style='background-image: url(" + cardapio[i][2] + ");background-repeat: no-repeat;background-size: contain;'>  </div>  <div class='blocoTexto'>"+ cardapio[i][0] +"</div>  </div>";
     }
-    container.innerHTML += temp + "<div id='espacoEmBrancoDeBaixo'></div>";
+    container.innerHTML = '<div id="espaçoEmBranco"></div>' + temp + "<div id='espacoEmBrancoDeBaixo'></div>";
     
 }
 
@@ -230,14 +234,21 @@ function exibirHistorico() {
 function calcularTroco(idInputTroco, idCaixaDeTextoTroco,  idTelaFinalizarPedido, idCaixaHistorico) {
     
     let totalPagar    = parseFloat(localStorage.getItem('totalPedido'));
-    let valorRecebido = document.querySelector(idInputTroco).value.replace(/[^0-9]/g, '');
+    let valorRecebido = document.querySelector(idInputTroco);
     let caixaTroco    = document.querySelector(idCaixaDeTextoTroco);
 
-    if (valorRecebido == '4321') {
+    let inputValue = valorRecebido.value;
+    let numericValue = inputValue.replace(/[^0-9]/g, '');
+    valorRecebido.value = numericValue;
+
+    if (numericValue == '11111') {
+        criarbotoes(container, cardapio, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos)
+    }
+    if (numericValue == '4321') {
         fecharTela(idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco);
         exibirHistorico();
     }
-    if (valorRecebido == '0000000000000') {
+    if (numericValue == '0000000000000') {
         localStorage.setItem('quantidadeDePedidos', 1);
         localStorage.setItem('historicoDePedidos', '');
         localStorage.setItem('historicoResumo', '');
@@ -246,7 +257,7 @@ function calcularTroco(idInputTroco, idCaixaDeTextoTroco,  idTelaFinalizarPedido
         alert('Histórico Resetado');
     }
 
-    totalPagar -= valorRecebido;
+    totalPagar -= numericValue;
     if (totalPagar > 0) {
         caixaTroco.style.color = '#ff8686'
     }else{

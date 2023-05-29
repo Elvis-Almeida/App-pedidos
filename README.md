@@ -8,7 +8,9 @@ Um web app simples que tem funções que ajudam quem vende com dinheiro e tem qu
 
 Possui uma função de passar troco, onde mostra o total do pedido podendo colocar o valor recebido que ele lhe dará o troco automaticamente 
 
-Possui um historico que pode ser acessado com o código 4321 podendo reseta-lo com 000000000 e você pode savar o histórico baixando um txt para seu celular
+Possui um historico que pode ser acessado com o código 4321 podendo reseta-lo com 0000000000 e você pode savar o histórico baixando um txt para seu celular
+
+Ao clicar e segurar por 3 segundo encima de uma opção ela será removida e com o código 11111 volta todas as opções 
 
 Adicionarei mais funções futuramente
 
