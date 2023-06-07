@@ -300,8 +300,8 @@ let cardapio = [
     ['River',             8,   './images/alimentos/river.png'],
     ['Copo refri',        2,   './images/alimentos/copo_de_refri.png'],
     ['Copo suco',         2,   './images/alimentos/copo_de_suco.png'], 
-    ['Fat. Bolo',         5,   './images/alimentos/copo_de_suco.png'], 
-    ['Água min.',         3,   './images/alimentos/copo_de_suco.png'], 
+    ['Fat. Bolo',         5,   './images/alimentos/pedaço_de_bolo.png'], 
+    ['Água min.',         3,   './images/alimentos/Garrafa_de_água.png'], 
     ['Salgado',           3,   './images/alimentos/salgados.png']
 ]
 
