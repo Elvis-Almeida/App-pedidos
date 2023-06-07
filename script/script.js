@@ -294,12 +294,14 @@ let cardapio = [
     ['Crepe',             3,   './images/alimentos/crepe.png'],
     ['Misto',             4,   './images/alimentos/misto.png'],
     ['C. quente',         3,   './images/alimentos/cachorro_quente.png'],
-    ['Coca-cola',         12,  './images/alimentos/coca-cola.png'],
-    ['Fanta',             12,  './images/alimentos/fanta.png'],
-    ['Antarctica',        12,  './images/alimentos/guarana_antarctica.png'],
-    ['River',             7,   './images/alimentos/river.png'],
+    ['Coca-cola',         11,  './images/alimentos/coca-cola.png'],
+    ['Fanta',             11,  './images/alimentos/fanta.png'],
+    ['Antarctica',        11,  './images/alimentos/guarana_antarctica.png'],
+    ['River',             8,   './images/alimentos/river.png'],
     ['Copo refri',        2,   './images/alimentos/copo_de_refri.png'],
     ['Copo suco',         2,   './images/alimentos/copo_de_suco.png'], 
+    ['Fat. Bolo',         5,   './images/alimentos/copo_de_suco.png'], 
+    ['Água min.',         3,   './images/alimentos/copo_de_suco.png'], 
     ['Salgado',           3,   './images/alimentos/salgados.png']
 ]
 
