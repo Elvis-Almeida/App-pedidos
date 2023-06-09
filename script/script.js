@@ -292,7 +292,7 @@ let cardapio = [
     ['Espetinho',         15,  './images/alimentos/espetinho.png'],
     ['Galin. caip.',      15,  './images/alimentos/galinha_caip.png'],
     ['Crepe',             3,   './images/alimentos/crepe.png'],
-    ['Misto',             4,   './images/alimentos/misto.png'],
+    ['Misto',             3,   './images/alimentos/misto.png'],
     ['C. quente',         3,   './images/alimentos/cachorro_quente.png'],
     ['Coca-cola',         11,  './images/alimentos/coca-cola.png'],
     ['Fanta',             11,  './images/alimentos/fanta.png'],
