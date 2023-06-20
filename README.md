@@ -1,7 +1,7 @@
 # App-pedidos
-
+<div width='50%'>
 ![f3](https://github.com/Elvis-Almeida/Elvis-Almeida-Servidor-Windows/assets/70353348/2c318a83-815c-412a-b908-887f0de11a7f)
-
+</div>
 ![f2](https://github.com/Elvis-Almeida/Elvis-Almeida-Servidor-Windows/assets/70353348/43ba2435-7f1a-4619-878f-e9288a1d3215)
 
 Um web app simples que tem funções que ajudam quem vende com dinheiro e tem que passar troco
