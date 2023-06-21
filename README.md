@@ -29,5 +29,5 @@ Vendo isso tive a ideia de criar esse app que solucionace essa dor, onde:
  - Além disso tem a função de salvar os pedidos em um histórico que salva a data, hora, itens e valor total do pedido (*esse histórico pode ser acessado digitando na caixa do valor recebido o código `4321` e para apagar todo o historico você pode digitar o código `0000000000000`*).
  - Ao clicar e segurar por 3 segundos encima de um item, ele é apagado da lista (*caso algum item tenha acabado e queira remove-lo, e para voltar os itens apagados para a tela novamente basta digitar o código `11111`*).
 
-Espero que tenha gostado dessa ideia e quero com o tempo melhorar esse projeto. Você pode acessar o app funcionando por esse link ![App](https://elvis-almeida.github.io/App-pedidos/) (*caso abra o link pelo PC ele não está adptado para funcionar neles, mas você pode redimencionar a janela para que veja de forma correta*)
+Espero que tenha gostado dessa ideia e quero com o tempo melhorar esse projeto. Você pode acessar o app funcionando por esse link [App](https://elvis-almeida.github.io/App-pedidos/) (*caso abra o link pelo PC ele não está adptado para funcionar neles, mas você pode redimencionar a janela para que veja de forma correta*)
 
