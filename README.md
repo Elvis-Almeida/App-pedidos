@@ -1,8 +1,18 @@
-# App-pedidos
-<div width='50%'>
-![f3](https://github.com/Elvis-Almeida/Elvis-Almeida-Servidor-Windows/assets/70353348/2c318a83-815c-412a-b908-887f0de11a7f)
-</div>
-![f2](https://github.com/Elvis-Almeida/Elvis-Almeida-Servidor-Windows/assets/70353348/43ba2435-7f1a-4619-878f-e9288a1d3215)
+# App de pedidos
+
+<table>
+  <tr>
+    <td>
+        <img src='https://github.com/Elvis-Almeida/App-pedidos/assets/70353348/9699a902-d2e4-4857-9a73-6570e3693eed' width='100%'>
+    </td>
+    <td>
+        <img src='https://github.com/Elvis-Almeida/App-pedidos/assets/70353348/9f27ee68-53d6-43e2-a3d0-a068eef5e42d' width='100%'>
+    </td>
+    <td>
+        <img src='https://github.com/Elvis-Almeida/App-pedidos/assets/70353348/eddb3465-33b9-4572-a7bb-495191ea52a1' width='100%'>
+    </td>
+  </tr>
+</table>
 
 Um web app simples que tem funções que ajudam quem vende com dinheiro e tem que passar troco
 
