@@ -1,61 +1,68 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="shortcut icon" href="./images/favicon.png" type="image/x-icon">
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="manifest" href="./manifest.json">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <link rel="shortcut icon" href="./images/favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="manifest" href="./manifest.json" />
     <title>SCJ - Pedidos</title>
-</head>
-<body>
- 
+  </head>
+  <body>
     <div id="historico">
-        <div id="textoHistorico"></div>
-        <div id="botoesHistorico">
-            <div class="botoes2" id="botaoFecharHistorico">Fechar</div>
-            <a id="botaoDownload"><div class="botoes2" id="botaoBaixarHistorico">Baixar</div></a>
-        </div>
-        
+      <div id="textoHistorico"></div>
+      <div id="botoesHistorico">
+        <div class="botoes2" id="botaoFecharHistorico">Fechar</div>
+        <a id="botaoDownload"
+          ><div class="botoes2" id="botaoBaixarHistorico">Baixar</div></a
+        >
+      </div>
     </div>
-    
+
     <div id="caixaDeConfirmacaoDeSalvamento">
-        <p id="textoDeConfirmacao">Tem certeza que deseja salvar?</p>
-        <div class="botoes2 botoesconfirmacao" id="caixaDeConfirmacao">Sim</div>
-        <div class="botoes2 botoesconfirmacao" id="caixaDeConfirmacaoFechar">Não</div>
+      <p id="textoDeConfirmacao">Tem certeza que deseja salvar?</p>
+      <div class="botoes2 botoesconfirmacao" id="caixaDeConfirmacao">Sim</div>
+      <div class="botoes2 botoesconfirmacao" id="caixaDeConfirmacaoFechar">
+        Não
+      </div>
     </div>
-    
+
     <div id="telaFinalizarPedido">
-        <div id="telaFinalizarPedidoTexto"></div>
-        <div id="caixaTelaFinalizar">
-            <div class="botoes1" id="caixaTotal">R$ 0,00</div>
-            <div class="botoes1" id="caixaTroco">R$ 0,00</div>
-        </div>
-        <input placeholder="Digite o valor" type="tel" name="inputPago" id="inputPago" inputmode="numeric">
-        <div id="caixaBotoes">
-            <div  class="botoes2" id="botaoFechar"><p>Fechar</p></div>
-            <div  class="botoes2" id="botaoCalcular"><p>Salvar</p></div>
-        </div>
+      <div id="telaFinalizarPedidoTexto"></div>
+      <div id="caixaTelaFinalizar">
+        <div class="botoes1" id="caixaTotal">R$ 0,00</div>
+        <div class="botoes1" id="caixaTroco">R$ 0,00</div>
+      </div>
+      <input
+        placeholder="Digite o valor"
+        type="tel"
+        name="inputPago"
+        id="inputPago"
+        inputmode="numeric"
+      />
+      <div id="caixaBotoes">
+        <div class="botoes2" id="botaoFechar"><p>Fechar</p></div>
+        <div class="botoes2" id="botaoCalcular"><p>Salvar</p></div>
+      </div>
     </div>
 
-    <div id='caixaDeTexto'>
-        <p></p>
-        <div id='caixaDePreco'>R$ 0,00</div>
+    <div id="caixaDeTexto">
+      <p></p>
+      <div id="caixaDePreco">R$ 0,00</div>
     </div>
 
-    <div id="botoesDeControle">  
-        <div  class="botoes" id="resetar">Resetar</div>  
-        <div  class="botoes" id="finalizarPedido">Finalizar</div>  
-        <div  class="botoes" id="apagar">Apagar</div> 
+    <div id="botoesDeControle">
+      <div class="botoes" id="resetar">Resetar</div>
+      <div class="botoes" id="finalizarPedido">Finalizar</div>
+      <div class="botoes" id="apagar">Apagar</div>
     </div>
 
-    <div id="container">
-        
-    </div>
-
-    
+    <div id="container"></div>
 
     <script src="./script/script.js"></script>
-</body>
+  </body>
 </html>
