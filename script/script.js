@@ -380,9 +380,10 @@ let cardapio = [
   ["Fanta", 12, "./images/alimentos/fanta.png"],
   ["Antarctica", 12, "./images/alimentos/guarana_antarctica.png"],
   ["River", 8, "./images/alimentos/river.png"],
+  ["Pitchula", 3, "./images/alimentos/Pitchula.png"],
   ["Copo refri", 2, "./images/alimentos/copo_de_refri.png"],
   ["Copo suco", 3, "./images/alimentos/copo_de_suco.png"],
-  ["Fat. Bolo", 5, "./images/alimentos/pedaço_de_bolo.png"],
+  ["Bolo", 5, "./images/alimentos/bolo_no_pote.png"],
   ["Água min.", 3, "./images/alimentos/Garrafa_de_água.png"],
   ["Salgado", 3, "./images/alimentos/salgados.png"],
 ];
