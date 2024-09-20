@@ -1,34 +1,38 @@
 {
-  "short_name": "SCJ - Pedidos",
-  "name": "SCJ - Pedidos",
+  "short_name": "SM - Pedidos",
+  "name": "SM - Pedidos",
   "description": "App de controle e manuseio de pedidos",
   "icons": [
     {
-      "src": "https://i.ibb.co/8rq786J/iconeApp.png",
+      "src": "https://i.ibb.co/yB449T9/Whats-App-Image-2024-09-20-at-5-25-43-PM-2.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose":"any maskable"
+      "purpose": "any maskable"
     },
     {
-      "src": "https://i.ibb.co/8rq786J/iconeApp.png",
+      "src": "https://i.ibb.co/yB449T9/Whats-App-Image-2024-09-20-at-5-25-43-PM-2.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose":"any maskable"
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
-  "background_color": "#f1f9ff",
+  "background_color": "#333333",
   "display": "fullscreen",
   "orientation": "portrait-primary",
-  "theme_color": "#354b5a",
+  "theme_color": "#333333",
   "shortcuts": [
     {
-      "short_name": "SCJ - Pedidos",
-      "name": "SCJ - Pedidos",
+      "short_name": "SM - Pedidos",
+      "name": "SM - Pedidos",
       "description": "App de controle e manuseio de pedidos",
       "url": "?source=pwa",
-      "icons": [{ "src": "https://i.ibb.co/8rq786J/iconeApp.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "https://i.ibb.co/yB449T9/Whats-App-Image-2024-09-20-at-5-25-43-PM-2.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
-
 }

@@ -371,8 +371,8 @@ let container = document.getElementById("container");
 let cardapio = [
   ["Caldo", 3, "./images/alimentos/caldo.png"],
   ["Canjica", 3, "./images/alimentos/canjica.png"],
-  ["Espetinho", 15, "./images/alimentos/espetinho.png"],
-  ["Galin. caip.", 18, "./images/alimentos/galinha_caip.png"],
+  ["Espetinho", 12, "./images/alimentos/espetinho.png"],
+  ["Galinha", 15, "./images/alimentos/galinha_caip.png"],
   ["Crepe", 3, "./images/alimentos/crepe.png"],
   ["Misto", 3, "./images/alimentos/misto.png"],
   ["C. quente", 3, "./images/alimentos/cachorro_quente.png"],
