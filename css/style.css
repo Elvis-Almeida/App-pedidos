@@ -80,6 +80,7 @@ body {
   margin: auto;
   width: 70%;
   height: 70%;
+  background-position: center;
 }
 .blocoTexto {
   margin-top: 1%;
