@@ -39,7 +39,7 @@ function criarbotoes(
   container,
   cardapio,
   idCaixaDeTextoDePedidos,
-  idCaixaDePrecoDePedidos
+  idCaixaDePrecoDePedidos,
 ) {
   let temp = "";
   for (let i = 0; i < cardapio.length; i++) {
@@ -99,7 +99,7 @@ function adicionarAoPedido(
   Nome,
   preco,
   idCaixaDeTextoDePedidos,
-  idCaixaDePrecoDePedidos
+  idCaixaDePrecoDePedidos,
 ) {
   let caixaDeTextoDePedidos = document.querySelector(idCaixaDeTextoDePedidos);
   let caixaDePrecoDePedidos = document.querySelector(idCaixaDePrecoDePedidos);
@@ -127,7 +127,7 @@ function resetarPedidos(
   idCaixaDeTextoDePedidos,
   idCaixaDePrecoDePedidos,
   idInputTroco,
-  idCaixaDeTextoTroco
+  idCaixaDeTextoTroco,
 ) {
   document.querySelector(idCaixaDeTextoDePedidos).textContent = "";
   document.querySelector(idCaixaDePrecoDePedidos).textContent = "R$ 0,00";
@@ -146,13 +146,13 @@ function finalizarPedido(
   idCaixaDeTextoDePedidos,
   idCaixaTotal,
   idTelaFinalizarPedidoTexto,
-  idInputTroco
+  idInputTroco,
 ) {
   let telaFinalizarPedido = document.querySelector(idTelaFinalizarPedido);
   let caixaDeTexto = document.querySelector(idCaixaDeTextoDePedidos);
   let telaTotal = document.querySelector(idCaixaTotal);
   let telaFinalizarPedidoTexto = document.querySelector(
-    idTelaFinalizarPedidoTexto
+    idTelaFinalizarPedidoTexto,
   );
   let totalPagar = parseFloat(localStorage.getItem("totalPedido"));
 
@@ -175,7 +175,7 @@ function apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
   ultimoValor = historicoDeInsercao.slice(historicoDeInsercao.length - 1);
   localStorage.setItem(
     "historicoDeInserção",
-    historicoDeInsercao.slice(0, historicoDeInsercao.length - 1)
+    historicoDeInsercao.slice(0, historicoDeInsercao.length - 1),
   );
 
   console.log(ultimoValor);
@@ -193,7 +193,7 @@ function fecharTela(
   idInputTroco,
   idTelaFinalizarPedido,
   idCaixaHistorico,
-  idCaixaDeTextoTroco
+  idCaixaDeTextoTroco,
 ) {
   document.querySelector(idInputTroco).value = "";
   document.querySelector(idTelaFinalizarPedido).style.display = "none";
@@ -235,15 +235,15 @@ function salvarNoHistorico(
   idCaixaHistorico,
   idCaixaDeTextoTroco,
   idCaixaDeTextoDePedidos,
-  idCaixaDePrecoDePedidos
+  idCaixaDePrecoDePedidos,
 ) {
   let totalPagar = parseFloat(localStorage.getItem("totalPedido"));
   let quantidadeDePedidos = parseInt(
-    localStorage.getItem("quantidadeDePedidos")
+    localStorage.getItem("quantidadeDePedidos"),
   );
   let listaPedido = localStorage.getItem("historicoDePedidos");
   let caixaDeTexto = document.querySelector(
-    idCaixaDeTextoDePedidos
+    idCaixaDeTextoDePedidos,
   ).textContent;
   let historicoResumo;
   let totalGeral = parseFloat(localStorage.getItem("totalGeral"));
@@ -278,13 +278,13 @@ function salvarNoHistorico(
     idInputTroco,
     idTelaFinalizarPedido,
     idCaixaHistorico,
-    idCaixaDeTextoTroco
+    idCaixaDeTextoTroco,
   );
   resetarPedidos(
     idCaixaDeTextoDePedidos,
     idCaixaDePrecoDePedidos,
     idInputTroco,
-    idCaixaDeTextoTroco
+    idCaixaDeTextoTroco,
   );
 }
 
@@ -298,7 +298,7 @@ function calcularTroco(
   idInputTroco,
   idCaixaDeTextoTroco,
   idTelaFinalizarPedido,
-  idCaixaHistorico
+  idCaixaHistorico,
 ) {
   let totalPagar = parseFloat(localStorage.getItem("totalPedido"));
   let valorRecebido = document.querySelector(idInputTroco);
@@ -313,7 +313,7 @@ function calcularTroco(
       container,
       cardapio,
       idCaixaDeTextoDePedidos,
-      idCaixaDePrecoDePedidos
+      idCaixaDePrecoDePedidos,
     );
   }
   if (numericValue == "4321") {
@@ -321,7 +321,7 @@ function calcularTroco(
       idInputTroco,
       idTelaFinalizarPedido,
       idCaixaHistorico,
-      idCaixaDeTextoTroco
+      idCaixaDeTextoTroco,
     );
     exibirHistorico();
   }
@@ -369,14 +369,17 @@ function gerarHistoricoResumido() {
 // ------------- principal -------------
 let container = document.getElementById("container");
 let cardapio = [
-  ["Caldo P", 3, "./images/alimentos/caldo_p.png"],
-  ["Caldo G", 5, "./images/alimentos/caldo.png"],
-  ["Canjica P", 3, "./images/alimentos/canjica_p.png"],
-  ["Canjica G", 5, "./images/alimentos/canjica.png"],
-  ["Espetinho", 18, "./images/alimentos/espetinho.png"],
-  ["Galin. caip.", 20, "./images/alimentos/galinha_caip.png"],
+  // ["Caldo P", 3, "./images/alimentos/caldo_p.png"],
+  ["Caldo", 5, "./images/alimentos/caldo.png"],
+  // ["Canjica P", 3, "./images/alimentos/canjica_p.png"],
+  ["Canjica", 5, "./images/alimentos/canjica.png"],
   ["Crepe", 5, "./images/alimentos/crepe.png"],
+  ["Espetinho", 20, "./images/alimentos/espetinho.png"],
+  ["Galin. caip.", 20, "./images/alimentos/galinha_caip.png"],
   ["Misto", 5, "./images/alimentos/misto.png"],
+  ["Açaí 250ml", 10, "./images/alimentos/acai_250ml.png"],
+  ["Açaí 400ml", 15, "./images/alimentos/acai_400ml.png"],
+  ["Açaí 500ml", 18, "./images/alimentos/acai_500ml.png"],
   ["C. quente", 5, "./images/alimentos/cachorro_quente.png"],
   ["Coca-cola", 15, "./images/alimentos/coca-cola.png"],
   ["Fanta", 15, "./images/alimentos/fanta.png"],
@@ -386,9 +389,9 @@ let cardapio = [
   // ["Copo refri", 2, "./images/alimentos/copo_de_refri.png"],
   ["Copo suco", 5, "./images/alimentos/copo_de_suco.png"],
   ["Jarra suco", 15, "./images/alimentos/jarra_de_suco.png"],
-  ["Bolo pote", 7, "./images/alimentos/bolo_no_pote.png"],
+  // ["Bolo pote", 7, "./images/alimentos/bolo_no_pote.png"],
   ["Água min.", 3, "./images/alimentos/Garrafa_de_água.png"],
-  ["Pula pula", 5, "./images/alimentos/pula_pula.png"],
+  ["Pula pula", 7, "./images/alimentos/pula_pula.png"],
 ];
 
 // Id caixas de textos principais
@@ -431,7 +434,7 @@ document.querySelector(idBotaoResetar).addEventListener("click", function () {
     idCaixaDeTextoDePedidos,
     idCaixaDePrecoDePedidos,
     idInputTroco,
-    idCaixaDeTextoTroco
+    idCaixaDeTextoTroco,
   );
 });
 document
@@ -442,7 +445,7 @@ document
       idCaixaDeTextoDePedidos,
       idCaixaTotal,
       idTelaFinalizarPedidoTexto,
-      idInputTroco
+      idInputTroco,
     );
   });
 document.querySelector(idBotaoApagar).addEventListener("click", function () {
@@ -456,7 +459,7 @@ document
       idInputTroco,
       idTelaFinalizarPedido,
       idCaixaHistorico,
-      idCaixaDeTextoTroco
+      idCaixaDeTextoTroco,
     );
   });
 document
@@ -466,7 +469,7 @@ document
       idInputTroco,
       idTelaFinalizarPedido,
       idCaixaHistorico,
-      idCaixaDeTextoTroco
+      idCaixaDeTextoTroco,
     );
   });
 document
@@ -486,7 +489,7 @@ document
       idCaixaHistorico,
       idCaixaDeTextoTroco,
       idCaixaDeTextoDePedidos,
-      idCaixaDePrecoDePedidos
+      idCaixaDePrecoDePedidos,
     );
     document.querySelector(caixaDeConfirmacaoDeSalvamento).style.display =
       "none";
@@ -507,7 +510,7 @@ document
       idCaixaHistorico,
       idCaixaDeTextoTroco,
       idCaixaDeTextoDePedidos,
-      idCaixaDePrecoDePedidos
+      idCaixaDePrecoDePedidos,
     );
     document.querySelector(caixaDeConfirmacaoDeSalvamento).style.display =
       "none";
@@ -521,7 +524,7 @@ document.querySelector(idInputTroco).addEventListener("keyup", function () {
     idInputTroco,
     idCaixaDeTextoTroco,
     idTelaFinalizarPedido,
-    idCaixaHistorico
+    idCaixaHistorico,
   );
 });
 
@@ -534,14 +537,14 @@ document.querySelector(idBotaoDownload).addEventListener("click", function () {
   this.setAttribute(
     "href",
     "data:text/plain;charset=utf-8, " +
-      encodeURIComponent(text.replace(/<br>/g, "\n"))
+      encodeURIComponent(text.replace(/<br>/g, "\n")),
   );
   this.setAttribute("download", "Historico_de_pedidos.txt");
 
   resumo.setAttribute(
     "href",
     "data:text/plain;charset=utf-8, " +
-      encodeURIComponent(textoResumo.replace(/<br>/g, "\n"))
+      encodeURIComponent(textoResumo.replace(/<br>/g, "\n")),
   );
   resumo.setAttribute("download", "Historico_resumo.txt");
 
@@ -568,7 +571,7 @@ criarbotoes(
   container,
   cardapio,
   idCaixaDeTextoDePedidos,
-  idCaixaDePrecoDePedidos
+  idCaixaDePrecoDePedidos,
 );
 registerServiceWorker();
 

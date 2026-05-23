@@ -1,320 +1,667 @@
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Roboto&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap");
 
-* {
-  margin: 0px;
-  padding: 0px;
+/* =============================================
+   RESET & BASE — iPhone optimized
+   ============================================= */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
+
+:root {
+  /* === Fundos (Cinzas bem escuros com um leve toque azulado residual) === */
+  --bg-primary: #0d1018;
+  --bg-secondary: #101116;
+
+  /* === Superfícies (Matiz azul reduzido pela metade, mantendo a opacidade) === */
+  --surface-0: rgba(4, 4, 10, 0.88);
+  --surface-1: rgba(19, 20, 28, 0.88);
+  --surface-2: rgba(25, 26, 36, 0.92);
+  --surface-3: rgba(34, 36, 50, 0.85);
+  --glass-border: rgba(140, 150, 180, 0.08);
+
+  /* === Acentos — Versões desbotadas/desaturadas dos azuis originais === */
+  --accent-blue: #3d70cc; /* Um azul bem mais sóbrio e acinzentado */
+  --accent-teal2: #e8ebec; /* Quase branco, com mínimo toque gélido */
+  --accent-teal: #5faecf; /* Ciano bem mais opaco e menos vibrante */
+  --accent-green: #34c76f; /* Mantido (verde funcional) */
+  --accent-red: #e05252; /* Mantido (vermelho funcional) */
+
+  /* Versões escuras dos acentos para gradientes */
+  --accent-blue-dark: #20448f; /* Azul escuro dessaturado */
+  --accent-green-dark: #1f8a48;
+  --accent-red-dark: #9e3030;
+
+  /* === Texto (Cinzas limpos com um reflexo sutil de azul) === */
+  --text-primary: #f0f1f5;
+  --text-secondary: rgba(180, 185, 210, 0.62);
+  --text-tertiary: rgba(145, 150, 175, 0.38);
+
+  /* === Raios === */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 30px;
+
+  /* === Safe area === */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+html {
+  height: 100%;
+  touch-action: manipulation;
+}
+
 body {
-  background-color: #272727;
-  color: aliceblue;
-  font-size: 10vw;
-  font-family: "Open Sans", sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+
+  /* 
+     Substituí as superfícies escuras pelas cores de acento.
+     Usando hex+opacidade (ex: #3d70cc15 que significa 15% de opacidade) 
+     para criar o brilho suave sem estourar na tela.
+  */
+  background-image:
+    radial-gradient(
+      ellipse 80% 50% at 20% -10%,
+      rgba(0, 174, 255, 0.536) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 150% 150% at 85% 110%,
+      rgba(95, 117, 207, 0.153) 0%,
+      transparent 65%
+    );
+
+  background-attachment: fixed; /* Mantém o gradiente parado enquanto você rola a página */
+  color: var(--text-primary);
+  font-family:
+    "Nunito",
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
   user-select: none;
+  overflow-x: hidden;
+  /* min-height: 100%; */
 }
+
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+
+::-webkit-scrollbar {
+  width: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 150, 220, 0.2);
+  border-radius: 99px;
+}
+
+/* =============================================
+   CONTAINER DE ITENS — grid 3 colunas exato
+   ============================================= */
 
 #container {
   position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.8vw;
+  padding: 0 3vw 3vw;
 }
 
-/* ------------------ Caixa de texto ----------------- */
+/* O espaço em branco ocupa a linha inteira */
+#espaçoEmBranco {
+  grid-column: 1 / -1;
+  height: 47vw;
+}
+
+#espacoEmBrancoDeBaixo {
+  grid-column: 1 / -1;
+  height: calc(26vw + var(--safe-bottom));
+}
+
+/* =============================================
+   CAIXA DE TEXTO (header fixo)
+   ============================================= */
 
 #caixaDeTexto {
   position: fixed;
-  background-color: #1d1d1dc7;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
-  height: 40vw;
-  top: 0px;
-  border-radius: 0px 0px 10vw 0px;
-  /* border: 2.5vw groove #944545; */
-  box-sizing: border-box;
+  height: 44vw;
+  background: var(--surface-1);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  border-radius: 0 0 var(--radius-xl) 0;
+  z-index: 10;
   overflow: hidden;
-  font-size: 6vw;
-  z-index: 1;
-  /* text-align: justify; */
-  padding: 10px;
-  padding-left: 15px;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
+
+#caixaDeTexto p {
+  font-size: 5.2vw;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
 #caixaDePreco {
   position: absolute;
-  background-color: #0c0c0cc4;
-  width: 40%;
-  height: 40%;
-  bottom: -6%;
-  right: -4%;
-  border-radius: 7vw 0px 0px 0px;
-  /* border: 2vw  groove #45946e; */
-  box-sizing: border-box;
-  padding-left: 20px;
-  padding-top: 10px;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(31, 31, 31, 0.3),
+    rgba(0, 0, 0, 0.3)
+  );
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg) 0 0 0;
+  width: 42%;
+  height: 44%;
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
+  font-size: 5.5vw;
+  font-weight: 800;
+  color: var(--accent-teal2);
+  letter-spacing: -0.02em;
 }
 
-/* ----------------- Espaço em branco superior ----------------- */
-
-#espaçoEmBranco {
-  position: relative;
-  /* background-color: #19d956; */
-  width: 100%;
-  height: 43vw;
-  /* margin-bottom: 40px; */
-}
-
-/* --------------- Blocos ----------------- */
+/* =============================================
+   BLOCOS (cards de produto)
+   ============================================= */
 
 .bloco {
-  display: inline-block;
-  position: relative;
-  width: 30vw;
-  height: 30vw;
-  background-color: #363636;
-  overflow: hidden;
-  margin-left: 2.5%;
-  border-radius: 10%;
-  transition: 0.5s ease-in-out;
-}
-.blocoImagem {
-  margin: auto;
-  width: 70%;
-  height: 70%;
-  background-position: center;
-}
-.blocoTexto {
-  margin-top: 1%;
-  text-align: center;
-  font-size: 5vw;
-  transition: 0.5s ease-in-out;
-}
-
-/* ----------------- Espaço em branco inferior ----------------- */
-
-#espacoEmBrancoDeBaixo {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* ocupa toda a célula do grid */
   width: 100%;
-  height: 120px;
+  aspect-ratio: 1 / 1;
+  background: var(--surface-2);
+  background-image: linear-gradient(
+    155deg,
+    rgba(140, 150, 220, 0.06) 0%,
+    transparent 55%
+  );
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }
 
-/* ----------------- Botões inferiores ----------------- */
+.bloco:active {
+  transform: scale(0.91);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  background: var(--surface-3);
+}
+
+.blocoImagem {
+  width: 58%;
+  height: 58%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  flex-shrink: 0;
+}
+
+.blocoTexto {
+  font-size: 3.5vw;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  margin-top: 3px;
+  letter-spacing: -0.01em;
+  padding: 0 4px;
+  line-height: 1.2;
+}
+
+/* =============================================
+   BARRA DE CONTROLE (rodapé fixo)
+   ============================================= */
 
 #botoesDeControle {
   position: fixed;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  background-color: #32323272;
-  bottom: 0px;
+  bottom: 0;
+  left: 0;
+  right: 0;
   width: 100%;
-  height: 25vw;
-  z-index: 1;
-  /* border-radius: 5vw 5vw 0vw 0vw; */
-}
-.botoes {
-  position: relative;
-  display: inline-block;
-  margin-top: 1.5vw;
-  width: 30vw;
-  height: 100vw;
-  background-color: #484848;
-  border-radius: 2vw;
-  font-size: 7vw;
-  overflow: hidden;
-  text-align: center;
-  padding-top: 2.4vw;
-  box-sizing: border-box;
-}
-#resetar {
-  margin-left: 0px;
-  background-color: #3997aa;
-}
-#finalizarPedido {
-  position: absolute;
-  margin-left: 50%;
-  transform: translate(-150%);
-  /* width: 370px; */
-  background-color: #39aa46;
-}
-#apagar {
-  position: absolute;
-  right: 0px;
-  background-color: #aa3939;
+  height: calc(22vw + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--surface-1);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-top: 2.5vw;
+  padding-left: 3vw;
+  padding-right: 3vw;
+  gap: 2vw;
+  z-index: 10;
 }
 
-/* --------------------- Tela Final --------------------- */
+.botoes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 15vw;
+  border-radius: var(--radius-sm);
+  font-size: 4.5vw;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease;
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  margin: 0 !important;
+  transform: none;
+  width: auto;
+}
+
+.botoes:active {
+  transform: scale(0.93) !important;
+  opacity: 0.82;
+}
+
+#resetar {
+  background: linear-gradient(150deg, #3a72d8, var(--accent-blue-dark));
+  box-shadow: 0 3px 14px rgba(58, 114, 216, 0.3);
+}
+
+#finalizarPedido {
+  background: linear-gradient(
+    150deg,
+    var(--accent-green),
+    var(--accent-green-dark)
+  );
+  box-shadow: 0 3px 14px rgba(52, 199, 111, 0.28);
+}
+
+#apagar {
+  background: linear-gradient(
+    150deg,
+    var(--accent-red),
+    var(--accent-red-dark)
+  );
+  box-shadow: 0 3px 14px rgba(224, 82, 82, 0.28);
+}
+
+/* =============================================
+   TELA FINALIZAR PEDIDO
+   ============================================= */
 
 #telaFinalizarPedido {
   display: none;
   position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
-  background-color: #363636;
-  z-index: 2;
-  user-select: none;
+  background: var(--bg-secondary);
+  background-image: radial-gradient(
+    ellipse 70% 40% at 50% 0%,
+    rgba(74, 143, 255, 0.09) 0%,
+    transparent 70%
+  );
+  z-index: 20;
+  overflow: hidden;
 }
 
 #telaFinalizarPedidoTexto {
-  position: relative;
   width: 100%;
-  height: 30%;
-  /* background-color: #fb0202; */
-  /* overflow: auto; */
-  overflow-y: scroll;
+  height: 32%;
+  overflow-y: auto;
   overflow-x: hidden;
-  font-size: 8vw;
-  /* overflow: hidden; */
-  padding-left: 3vw;
-  padding-top: 1vw;
+  font-size: 6.5vw;
+  font-weight: 600;
+  padding: 20px 18px 10px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--glass-border);
 }
 
-/* ------------- Caixas superiores ------------- */
+/* Caixas Total / Troco */
 
 #caixaTelaFinalizar {
   position: relative;
   width: 100%;
-  height: 21vw;
-  /* background-color: #3997aa; */
-}
-.botoes1 {
-  /* display: none; */
-  position: absolute;
-  /* display: inline-block; */
-  width: 50vw;
-  height: 100%;
-  padding-top: 6vw;
-  padding-left: 4vw;
-  /* text-align: center; */
-  overflow: hidden;
-  border-radius: 5vw 5vw 0vw 0vw;
-}
-#caixaTotal {
-  background-color: #9e9e9e;
-  /* margin-left: 2px; */
-}
-#caixaTroco {
-  background-color: #7d7d7d;
-  right: 0%;
-  color: #86d9ff;
+  height: 22vw;
+  display: flex;
 }
 
-/* --------------- Input -------------- */
+.botoes1 {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding-left: 5vw;
+  font-size: 6vw;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  overflow: hidden;
+}
+
+#caixaTotal {
+  background: linear-gradient(
+    145deg,
+    rgba(50, 54, 88, 0.65),
+    rgba(35, 38, 62, 0.65)
+  );
+  border: 1px solid var(--glass-border);
+  border-right: none;
+  color: var(--text-primary);
+  margin-right: 1px;
+}
+
+#caixaTroco {
+  background: linear-gradient(
+    145deg,
+    rgba(74, 143, 255, 0.18),
+    rgba(42, 95, 204, 0.14)
+  );
+  border: 1px solid rgba(74, 143, 255, 0.22);
+  color: var(--accent-teal);
+}
+
+/* Input */
 
 #inputPago {
-  display: inline;
+  display: block;
   width: 100%;
-  height: 15vw;
-  font-size: 10vw;
+  height: 16vw;
+  font-size: 9vw;
+  font-weight: 700;
+  font-family:
+    "Nunito",
+    -apple-system,
+    sans-serif;
   text-align: center;
-  margin-top: 6vw;
-  font-family: "Open Sans", sans-serif;
-  /* user-select: none; */
-  /* box-sizing: border-box; */
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  letter-spacing: -0.02em;
+  margin-top: 4vw;
+  -webkit-user-select: text;
+  user-select: text;
 }
+
 textarea:focus,
 input:focus {
-  box-shadow: 0 0 0 0;
-  outline: 0;
+  box-shadow: none;
+  outline: none;
+  background: rgba(74, 143, 255, 0.07);
 }
 
-#inputPago::selection {
-  border-color: transparent;
-}
-
-/* ------------ Botões inferiores ----------- */
+/* Botões Fechar / Salvar */
 
 #caixaBotoes {
   position: relative;
-  margin-top: 1vw;
-  height: 18vw;
-  text-align: center;
-  font-size: 10vw;
-}
-.botoes2 {
-  position: absolute;
-  display: inline-block;
-  width: 48vw;
-  height: 100%;
-  padding-top: 1.8vw;
-  border-radius: 2vw;
-}
-#botaoFechar {
-  background-color: #aa3939;
-  left: 1vw;
-  box-sizing: border-box;
-}
-#botaoCalcular {
-  right: 1vw;
-  background-color: #3986aa;
-  box-sizing: border-box;
+  display: flex;
+  gap: 2vw;
+  padding: 3vw 3vw 0;
+  height: 19vw;
 }
 
-/* ------------------- Tela de Histórico ------------------- */
+#caixaBotoes .botoes2 {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5.5vw;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  width: auto;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  transform: none;
+}
+
+#botaoFechar {
+  background: linear-gradient(
+    150deg,
+    var(--accent-red),
+    var(--accent-red-dark)
+  );
+  box-shadow: 0 3px 14px rgba(224, 82, 82, 0.25);
+}
+
+#botaoCalcular {
+  background: linear-gradient(150deg, #3a72d8, var(--accent-blue-dark));
+  box-shadow: 0 3px 14px rgba(58, 114, 216, 0.25);
+}
+
+#botaoFechar:active,
+#botaoCalcular:active {
+  transform: scale(0.95);
+  opacity: 0.85;
+}
+
+/* =============================================
+   TELA HISTÓRICO
+   ============================================= */
 
 #historico {
   display: none;
   position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
-  background-color: #3f3f3f;
-  z-index: 3;
+  background: var(--bg-secondary);
+  z-index: 30;
   overflow: auto;
-}
-#textoHistorico {
-  width: 100%;
-  height: 100%;
-  background-color: #3f3f3f;
-}
-#botoesHistorico {
-  background-color: #5d5d5d;
-  position: fixed;
-  width: 100%;
-  height: 20vw;
-  text-align: center;
-  bottom: 0px;
-  border-radius: 2vw;
-}
-#botaoFecharHistorico {
-  margin-top: 1vw;
-  background-color: #aa3939;
-  left: 1vw;
-  box-sizing: border-box;
-}
-#botaoBaixarHistorico {
-  margin-top: 1vw;
-  right: 1vw;
-  background-color: #39aa6a;
-  box-sizing: border-box;
-}
-a {
-  color: white;
+  padding-bottom: calc(22vw + var(--safe-bottom));
 }
 
-/*  ----------- tela de confirmação ----------- */
+#textoHistorico {
+  width: 100%;
+  min-height: 100%;
+  padding: 20px 16px;
+  font-size: 4.2vw;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+#botoesHistorico {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(20vw + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--surface-1);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-top: 2.5vw;
+  padding-left: 3vw;
+  padding-right: 3vw;
+  gap: 2vw;
+}
+
+#botaoFecharHistorico,
+#botaoBaixarHistorico {
+  position: relative;
+  flex: 1;
+  height: 14vw;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4.8vw;
+  font-weight: 700;
+  width: auto;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  margin: 0;
+}
+
+#botaoFecharHistorico {
+  background: linear-gradient(
+    150deg,
+    var(--accent-red),
+    var(--accent-red-dark)
+  );
+}
+
+#botaoBaixarHistorico {
+  background: linear-gradient(
+    150deg,
+    var(--accent-green),
+    var(--accent-green-dark)
+  );
+}
+
+#botaoFecharHistorico:active,
+#botaoBaixarHistorico:active {
+  transform: scale(0.95);
+  opacity: 0.85;
+}
+
+a {
+  color: var(--text-primary);
+  text-decoration: none;
+  display: flex;
+  flex: 1;
+}
+
+a #botaoBaixarHistorico {
+  width: 100%;
+}
+
+/* =============================================
+   TELA DE CONFIRMAÇÃO
+   ============================================= */
+
 #caixaDeConfirmacaoDeSalvamento {
   display: none;
   position: fixed;
+  inset: 0;
   width: 100%;
   height: 100vh;
-  background-color: #3f3f3f;
-  z-index: 3;
+  background: rgba(12, 13, 18, 0.9);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  z-index: 40;
 }
-.botoesconfirmacao {
-  margin-top: 60vw;
-  position: absolute;
-  height: 17vw;
-}
+
 #textoDeConfirmacao {
-  margin-top: 15vw;
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60px);
+  width: 80%;
   text-align: center;
+  font-size: 6vw;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
+
+.botoesconfirmacao {
+  position: absolute;
+  top: 50%;
+  transform: translateY(20px);
+  height: 15vw;
+  width: 44vw;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5.5vw;
+  font-weight: 700;
+  margin: 0;
+}
+
 #caixaDeConfirmacao {
-  right: 1vw;
-  text-align: center;
-  background-color: #39aa6a;
+  right: 3vw;
+  background: linear-gradient(
+    150deg,
+    var(--accent-green),
+    var(--accent-green-dark)
+  );
+  box-shadow: 0 4px 16px rgba(52, 199, 111, 0.28);
 }
+
 #caixaDeConfirmacaoFechar {
-  left: 1vw;
-  text-align: center;
-  background-color: #aa3939;
+  left: 3vw;
+  background: linear-gradient(
+    150deg,
+    var(--accent-red),
+    var(--accent-red-dark)
+  );
+  box-shadow: 0 4px 16px rgba(224, 82, 82, 0.28);
+}
+
+#caixaDeConfirmacao:active,
+#caixaDeConfirmacaoFechar:active {
+  transform: translateY(20px) scale(0.95);
+  opacity: 0.85;
+}
+
+/* =============================================
+   UTILITÁRIOS GLOBAIS .botoes2
+   ============================================= */
+
+.botoes2 {
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease;
 }
