@@ -369,9 +369,9 @@ function gerarHistoricoResumido() {
 // ------------- principal -------------
 let container = document.getElementById("container");
 let cardapio = [
-  // ["Caldo P", 3, "./images/alimentos/caldo_p.png"],
+  ["Caldo P", 3, "./images/alimentos/caldo_p.png"],
   ["Caldo", 5, "./images/alimentos/caldo.png"],
-  // ["Canjica P", 3, "./images/alimentos/canjica_p.png"],
+  ["Canjica P", 3, "./images/alimentos/canjica_p.png"],
   ["Canjica", 5, "./images/alimentos/canjica.png"],
   ["Crepe", 5, "./images/alimentos/crepe.png"],
   ["Espetinho", 20, "./images/alimentos/espetinho.png"],
