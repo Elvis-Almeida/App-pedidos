@@ -53,21 +53,43 @@
     </div>
 
     <div id="telaFinalizarPedido">
-      <div id="telaFinalizarPedidoTexto"></div>
-      <div id="caixaTelaFinalizar">
-        <div class="botoes1" id="caixaTotal">R$ 0,00</div>
-        <div class="botoes1" id="caixaTroco">R$ 0,00</div>
+      <!-- Cabeçalho -->
+      <div id="headerFinalizarPedido">
+        <h2>Resumo do Pedido</h2>
+        <span id="contadorItens">0 itens</span>
       </div>
-      <input
-        placeholder="Digite o valor"
-        type="tel"
-        name="inputPago"
-        id="inputPago"
-        inputmode="numeric"
-      />
+
+      <!-- Lista de itens -->
+      <div id="telaFinalizarPedidoTexto"></div>
+
+      <!-- Total -->
+      <div id="blocoTotal">
+        <span id="labelTotal">Total</span>
+        <span id="caixaTotal">R$ 0,00</span>
+      </div>
+
+      <!-- Input valor pago -->
+      <div id="areapagamento">
+        <div id="labelPago">Valor recebido</div>
+        <input
+          placeholder="R$ 0,00"
+          type="tel"
+          name="inputPago"
+          id="inputPago"
+          inputmode="numeric"
+        />
+      </div>
+
+      <!-- Troco -->
+      <div id="blocoTroco">
+        <span id="labelTroco">Troco</span>
+        <span id="caixaTroco">R$ 0,00</span>
+      </div>
+
+      <!-- Botões -->
       <div id="caixaBotoes">
-        <div class="botoes2" id="botaoFechar"><p>Fechar</p></div>
-        <div class="botoes2" id="botaoCalcular"><p>Salvar</p></div>
+        <div class="botoes2" id="botaoFechar">Fechar</div>
+        <div class="botoes2" id="botaoCalcular">✓ Salvar pedido</div>
       </div>
     </div>
 

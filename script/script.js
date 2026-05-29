@@ -149,18 +149,60 @@ function finalizarPedido(
   idInputTroco,
 ) {
   let telaFinalizarPedido = document.querySelector(idTelaFinalizarPedido);
-  let caixaDeTexto = document.querySelector(idCaixaDeTextoDePedidos);
   let telaTotal = document.querySelector(idCaixaTotal);
   let telaFinalizarPedidoTexto = document.querySelector(
     idTelaFinalizarPedidoTexto,
   );
   let totalPagar = parseFloat(localStorage.getItem("totalPedido"));
 
-  telaFinalizarPedido.style.display = "block";
-  telaTotal.textContent = formatarNumero("", totalPagar, "");
-  document.querySelector(idInputTroco).focus();
+  telaFinalizarPedido.style.display = "flex";
+  // animação de entrada
+  telaFinalizarPedido.classList.remove("visivel");
+  requestAnimationFrame(() => telaFinalizarPedido.classList.add("visivel"));
 
-  telaFinalizarPedidoTexto.innerHTML = formatarLista(listaCaixaDeTexto, true);
+  telaTotal.textContent = formatarNumero("", totalPagar, "");
+
+  // Renderiza lista estruturada por produto
+  let produtos = {};
+  let precos = {};
+  for (let i = 0; i < listaCaixaDeTexto.length; i++) {
+    let nome = listaCaixaDeTexto[i];
+    produtos[nome] = (produtos[nome] || 0) + 1;
+    let item = cardapio.find((c) => c[0] === nome);
+    if (item) precos[nome] = item[1];
+  }
+
+  let totalItens = listaCaixaDeTexto.length;
+  document.getElementById("contadorItens").textContent =
+    totalItens + (totalItens === 1 ? " item" : " itens");
+
+  let html = "";
+  for (let nome in produtos) {
+    let qtd = produtos[nome];
+    let preco = precos[nome] || 0;
+    let subtotal = qtd * preco;
+    html += `<div class="itemPedidoLinha">
+      <span class="itemNome">${nome}</span>
+      <span class="itemQtd">×${qtd}</span>
+      <span class="itemPreco">${formatarNumero("", subtotal, "")}</span>
+    </div>`;
+  }
+  telaFinalizarPedidoTexto.innerHTML =
+    html ||
+    "<p style='color:var(--text-tertiary);font-size:4vw;padding:8px 0'>Nenhum item adicionado</p>";
+
+  // ativa/desativa botão salvar
+  let btnSalvar = document.querySelector(idBotaoSalvarNoHistorico);
+  if (totalItens === 0) {
+    btnSalvar.classList.add("desativado");
+  } else {
+    btnSalvar.classList.remove("desativado");
+  }
+
+  document.querySelector(idInputTroco).value = "";
+  document.querySelector(idCaixaDeTextoTroco).textContent = "R$ 0,00";
+  document.querySelector(idCaixaDeTextoTroco).classList.remove("falta");
+  document.querySelector(idInputTroco).focus();
 }
 
 function apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
@@ -198,7 +240,11 @@ function fecharTela(
   document.querySelector(idInputTroco).value = "";
   document.querySelector(idTelaFinalizarPedido).style.display = "none";
   document.querySelector(idCaixaHistorico).style.display = "none";
-  document.querySelector(idCaixaDeTextoTroco).textContent = "R$ 0,00";
+  let troco = document.querySelector(idCaixaDeTextoTroco);
+  troco.textContent = "R$ 0,00";
+  troco.classList.remove("falta");
+  let labelTroco = document.getElementById("labelTroco");
+  if (labelTroco) labelTroco.textContent = "Troco";
 }
 
 function formatarNumero(prefixo, numero, sufixo) {
@@ -336,9 +382,11 @@ function calcularTroco(
 
   totalPagar -= numericValue;
   if (totalPagar > 0) {
-    caixaTroco.style.color = "#ff8686";
+    caixaTroco.classList.add("falta");
+    document.getElementById("labelTroco").textContent = "Falta";
   } else {
-    caixaTroco.style.color = "#86d9ff";
+    caixaTroco.classList.remove("falta");
+    document.getElementById("labelTroco").textContent = "Troco";
   }
 
   caixaTroco.textContent = formatarNumero("", totalPagar * -1, "");
@@ -574,5 +622,3 @@ criarbotoes(
   idCaixaDePrecoDePedidos,
 );
 registerServiceWorker();
-
-// }
