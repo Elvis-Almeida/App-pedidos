@@ -14,41 +14,28 @@
 }
 
 :root {
-  /* === Fundos (Cinzas bem escuros com um leve toque azulado residual) === */
   --bg-primary: #0d1018;
   --bg-secondary: #101116;
-
-  /* === Superfícies (Matiz azul reduzido pela metade, mantendo a opacidade) === */
   --surface-0: rgba(4, 4, 10, 0.88);
   --surface-1: rgba(19, 20, 28, 0.88);
   --surface-2: rgba(25, 26, 36, 0.92);
   --surface-3: rgba(34, 36, 50, 0.85);
   --glass-border: rgba(140, 150, 180, 0.08);
-
-  /* === Acentos — Versões desbotadas/desaturadas dos azuis originais === */
-  --accent-blue: #3d70cc; /* Um azul bem mais sóbrio e acinzentado */
-  --accent-teal2: #e8ebec; /* Quase branco, com mínimo toque gélido */
-  --accent-teal: #5faecf; /* Ciano bem mais opaco e menos vibrante */
-  --accent-green: #34c76f; /* Mantido (verde funcional) */
-  --accent-red: #e05252; /* Mantido (vermelho funcional) */
-
-  /* Versões escuras dos acentos para gradientes */
-  --accent-blue-dark: #20448f; /* Azul escuro dessaturado */
+  --accent-blue: #3d70cc;
+  --accent-teal2: #e8ebec;
+  --accent-teal: #5faecf;
+  --accent-green: #34c76f;
+  --accent-red: #e05252;
+  --accent-blue-dark: #20448f;
   --accent-green-dark: #1f8a48;
   --accent-red-dark: #9e3030;
-
-  /* === Texto (Cinzas limpos com um reflexo sutil de azul) === */
   --text-primary: #f0f1f5;
   --text-secondary: rgba(180, 185, 210, 0.62);
   --text-tertiary: rgba(145, 150, 175, 0.38);
-
-  /* === Raios === */
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 22px;
   --radius-xl: 30px;
-
-  /* === Safe area === */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -63,12 +50,6 @@ body {
   padding: 0;
   min-height: 100vh;
   background-color: var(--bg-primary);
-
-  /* 
-     Substituí as superfícies escuras pelas cores de acento.
-     Usando hex+opacidade (ex: #3d70cc15 que significa 15% de opacidade) 
-     para criar o brilho suave sem estourar na tela.
-  */
   background-image:
     radial-gradient(
       ellipse 80% 50% at 20% -10%,
@@ -80,8 +61,7 @@ body {
       rgba(95, 117, 207, 0.153) 0%,
       transparent 65%
     );
-
-  background-attachment: fixed; /* Mantém o gradiente parado enquanto você rola a página */
+  background-attachment: fixed;
   color: var(--text-primary);
   font-family:
     "Nunito",
@@ -100,7 +80,6 @@ body {
   -moz-user-select: none;
   user-select: none;
   overflow-x: hidden;
-  /* min-height: 100%; */
 }
 
 /* =============================================
@@ -119,7 +98,7 @@ body {
 }
 
 /* =============================================
-   CONTAINER DE ITENS — grid 3 colunas exato
+   CONTAINER DE ITENS
    ============================================= */
 
 #container {
@@ -130,7 +109,6 @@ body {
   padding: 0 3vw 3vw;
 }
 
-/* O espaço em branco ocupa a linha inteira */
 #espaçoEmBranco {
   grid-column: 1 / -1;
   height: 47vw;
@@ -209,7 +187,6 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* ocupa toda a célula do grid */
   width: 100%;
   aspect-ratio: 1 / 1;
   background: var(--surface-2);
@@ -350,7 +327,7 @@ body {
   flex-direction: column;
 }
 
-/* Animação de entrada */
+/* animação de entrada */
 @keyframes slideUp {
   from {
     transform: translateY(30px);
@@ -365,7 +342,7 @@ body {
   animation: slideUp 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* — Cabeçalho da tela — */
+/* — Cabeçalho — */
 #headerFinalizarPedido {
   display: flex;
   align-items: center;
@@ -392,7 +369,7 @@ body {
   padding: 2px 10px;
 }
 
-/* — Lista de itens — */
+/* — Lista de itens (área scrollável) — */
 #telaFinalizarPedidoTexto {
   width: 100%;
   flex: 1;
@@ -400,9 +377,9 @@ body {
   overflow-x: hidden;
   padding: 10px 16px 8px;
   border-bottom: 1px solid var(--glass-border);
+  min-height: 0; /* essencial para flex scroll funcionar */
 }
 
-/* cada linha de item */
 .itemPedidoLinha {
   display: flex;
   align-items: center;
@@ -441,56 +418,75 @@ body {
   text-align: right;
 }
 
-/* — Bloco Total — */
-#blocoTotal {
+/* — Total / Troco lado a lado (estrutura original mantida) — */
+#caixaTelaFinalizar {
+  position: relative;
+  width: 100%;
+  height: 22vw;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 18px;
-  background: linear-gradient(
-    145deg,
-    rgba(50, 54, 88, 0.55),
-    rgba(30, 33, 52, 0.55)
-  );
-  border-bottom: 1px solid var(--glass-border);
   flex-shrink: 0;
 }
 
-#labelTotal {
-  font-size: 4vw;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.botoes1 {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding-left: 5vw;
+  font-size: 6vw;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  overflow: hidden;
 }
 
 #caixaTotal {
-  font-size: 7vw;
-  font-weight: 800;
-  color: var(--accent-teal2);
-  letter-spacing: -0.03em;
+  background: linear-gradient(
+    145deg,
+    rgba(50, 54, 88, 0.65),
+    rgba(35, 38, 62, 0.65)
+  );
+  border: 1px solid var(--glass-border);
+  border-right: none;
+  color: var(--text-primary);
+  margin-right: 1px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
 }
 
-/* — Área de pagamento — */
-#areapagamento {
-  padding: 10px 16px 6px;
-  flex-shrink: 0;
+#caixaTroco {
+  background: linear-gradient(
+    145deg,
+    rgba(74, 143, 255, 0.18),
+    rgba(42, 95, 204, 0.14)
+  );
+  border: 1px solid rgba(74, 143, 255, 0.22);
+  color: var(--accent-teal);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
 }
 
-#labelPago {
-  font-size: 3.4vw;
+#caixaTroco.falta {
+  color: var(--accent-red);
+}
+
+.labelCaixa {
+  font-size: 2.8vw;
   font-weight: 600;
-  color: var(--text-secondary);
+  opacity: 0.55;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 6px;
+  line-height: 1;
 }
 
+/* — Input — */
 #inputPago {
   display: block;
   width: 100%;
-  height: 14vw;
-  font-size: 8vw;
+  height: 16vw;
+  font-size: 9vw;
   font-weight: 700;
   font-family:
     "Nunito",
@@ -498,60 +494,30 @@ body {
     sans-serif;
   text-align: center;
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1.5px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
   letter-spacing: -0.02em;
+  margin-top: 0;
+  flex-shrink: 0;
   -webkit-user-select: text;
   user-select: text;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
+  transition: background 0.15s;
 }
 
 textarea:focus,
 input:focus {
   box-shadow: none;
   outline: none;
-  border-color: rgba(95, 174, 207, 0.4) !important;
-  background: rgba(74, 143, 255, 0.06) !important;
-}
-
-/* — Bloco Troco — */
-#blocoTroco {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 18px 4px;
-  flex-shrink: 0;
-}
-
-#labelTroco {
-  font-size: 3.4vw;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-#caixaTroco {
-  font-size: 6.5vw;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  transition: color 0.2s;
-  color: var(--accent-teal);
-}
-
-#caixaTroco.falta {
-  color: var(--accent-red);
+  background: rgba(74, 143, 255, 0.07);
 }
 
 /* — Botões Fechar / Salvar — */
 #caixaBotoes {
-  position: relative;
   display: flex;
   gap: 2vw;
-  padding: 6px 3vw calc(6px + var(--safe-bottom));
+  padding: 3vw 3vw calc(3vw + var(--safe-bottom));
   flex-shrink: 0;
 }
 
@@ -592,11 +558,6 @@ input:focus {
   );
   box-shadow: 0 3px 14px rgba(52, 199, 111, 0.28);
   flex: 1.3;
-}
-
-#botaoCalcular.desativado {
-  opacity: 0.4;
-  pointer-events: none;
 }
 
 #botaoFechar:active,
@@ -775,7 +736,7 @@ a #botaoBaixarHistorico {
 }
 
 /* =============================================
-   UTILITÁRIOS GLOBAIS .botoes2
+   UTILITÁRIOS GLOBAIS
    ============================================= */
 
 .botoes2 {
