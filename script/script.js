@@ -1,13 +1,18 @@
 var listaCaixaDeTexto = [];
 
 function registerServiceWorker() {
+  // registrando o service worker para navegadores com suporte
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("https://elvis-almeida.github.io/App-pedidos/sw.js", {
         scope: "../",
       })
-      .then(() => console.log("Service Worker registrado com sucesso."))
-      .catch((error) => console.log("Service Worker falhou:", error));
+      .then(() => {
+        console.log("Service Worker registrado com sucesso.");
+      })
+      .catch((error) => {
+        console.log("Service Worker falhou:", error);
+      });
   }
 }
 
@@ -47,11 +52,9 @@ function criarbotoes(
       idCaixaDeTextoDePedidos +
       "`,`" +
       idCaixaDePrecoDePedidos +
-      "`)' class='bloco'>" +
-      "  <div class='blocoImagem' style='background-image: url(" +
+      "`)' class='bloco'>  <div class='blocoImagem' style='background-image: url(" +
       cardapio[i][2] +
-      ");background-repeat: no-repeat;background-size: contain;'>  </div>" +
-      "  <div class='blocoTexto'>" +
+      ");background-repeat: no-repeat;background-size: contain;'>  </div>  <div class='blocoTexto'>" +
       cardapio[i][0] +
       "</div>  </div>";
   }
@@ -61,61 +64,35 @@ function criarbotoes(
     "<div id='espacoEmBrancoDeBaixo'></div>";
 }
 
-// cria string para caixa de texto (usada no header principal e no histórico)
+// cria string para caixa de texto
 function formatarLista(lista, quebrarlinha = false) {
   let resultado = "";
   let produtos = {};
+
   for (let i = 0; i < lista.length; i++) {
     const produto = lista[i];
-    produtos[produto] = (produtos[produto] || 0) + 1;
+    if (produtos.hasOwnProperty(produto)) {
+      produtos[produto]++;
+    } else {
+      produtos[produto] = 1;
+    }
   }
-  let c = 0;
+
+  c = 0;
   for (let produto in produtos) {
-    resultado += (c === 0 ? "" : " ") + `${produtos[produto]} ${produto},`;
+    if (c == 0) {
+      resultado += `${produtos[produto]} ${produto},`;
+    } else {
+      resultado += ` ${produtos[produto]} ${produto},`;
+    }
     c = 1;
-    if (quebrarlinha) resultado += "<br>";
+    if (quebrarlinha) {
+      resultado += "<br>";
+    }
   }
   console.log(resultado);
+
   return resultado;
-}
-
-// renderiza lista estruturada na telaFinalizarPedido
-function renderizarListaPedido(idTelaFinalizarPedidoTexto) {
-  let produtos = {};
-  for (let i = 0; i < listaCaixaDeTexto.length; i++) {
-    let nome = listaCaixaDeTexto[i];
-    produtos[nome] = (produtos[nome] || 0) + 1;
-  }
-
-  let totalItens = listaCaixaDeTexto.length;
-  let contador = document.getElementById("contadorItens");
-  if (contador)
-    contador.textContent = totalItens + (totalItens === 1 ? " item" : " itens");
-
-  let html = "";
-  for (let nome in produtos) {
-    let qtd = produtos[nome];
-    let item = cardapio.find((c) => c[0] === nome);
-    let preco = item ? item[1] : 0;
-    let subtotal = qtd * preco;
-    html +=
-      "<div class='itemPedidoLinha'>" +
-      "<span class='itemNome'>" +
-      nome +
-      "</span>" +
-      "<span class='itemQtd'>×" +
-      qtd +
-      "</span>" +
-      "<span class='itemPreco'>" +
-      formatarNumero("", subtotal, "") +
-      "</span>" +
-      "</div>";
-  }
-
-  let el = document.querySelector(idTelaFinalizarPedidoTexto);
-  el.innerHTML =
-    html ||
-    "<p style='color:var(--text-tertiary);font-size:4vw;padding:8px 0'>Nenhum item adicionado</p>";
 }
 
 function adicionarAoPedido(
@@ -135,10 +112,13 @@ function adicionarAoPedido(
 
   caixaDePrecoDePedidos.textContent = formatarNumero("", totalPagar, "");
 
+  // criando histórco de inserção
   let historicoDeInserção = localStorage.getItem("historicoDeInserção");
   historicoDeInserção += "," + preco;
   localStorage.setItem("historicoDeInserção", historicoDeInserção);
   localStorage.setItem("totalPedido", totalPagar);
+
+  // add texto caixa de texto
 
   caixaDeTextoDePedidos.textContent = formatarLista(listaCaixaDeTexto);
 }
@@ -151,9 +131,12 @@ function resetarPedidos(
 ) {
   document.querySelector(idCaixaDeTextoDePedidos).textContent = "";
   document.querySelector(idCaixaDePrecoDePedidos).textContent = "R$ 0,00";
+
   document.querySelector(idInputTroco).value = "";
   document.querySelector(idCaixaDeTextoTroco).textContent = "R$ 0,00";
+
   listaCaixaDeTexto = [];
+
   localStorage.setItem("historicoDeInserção", "");
   localStorage.setItem("totalPedido", 0);
 }
@@ -167,36 +150,65 @@ function finalizarPedido(
 ) {
   let telaFinalizarPedido = document.querySelector(idTelaFinalizarPedido);
   let telaTotal = document.querySelector(idCaixaTotal);
+  let telaFinalizarPedidoTexto = document.querySelector(
+    idTelaFinalizarPedidoTexto,
+  );
   let totalPagar = parseFloat(localStorage.getItem("totalPedido"));
 
-  // mostra como flex (layout coluna)
-  telaFinalizarPedido.style.display = "flex";
-
-  // animação de entrada
+  // exibe com animação
+  telaFinalizarPedido.style.display = "block";
   telaFinalizarPedido.classList.remove("visivel");
   requestAnimationFrame(() => telaFinalizarPedido.classList.add("visivel"));
 
-  // atualiza total — preserva o label "Total" que está no HTML
-  // o textContent do span.labelCaixa já está no DOM; só atualiza o valor
-  let labelTotal = telaTotal.querySelector(".labelCaixa");
-  telaTotal.textContent = "";
-  if (labelTotal) telaTotal.appendChild(labelTotal);
-  telaTotal.appendChild(
-    document.createTextNode(formatarNumero("", totalPagar, "")),
-  );
+  telaTotal.textContent = formatarNumero("", totalPagar, "");
 
   // reseta troco
-  let caixaTroco = document.querySelector(idCaixaDeTextoTroco);
-  let labelTrocoEl = document.getElementById("labelTroco");
-  let labelTrocoNode = labelTrocoEl ? labelTrocoEl : null;
-  caixaTroco.textContent = "";
-  if (labelTrocoNode) caixaTroco.appendChild(labelTrocoNode);
-  caixaTroco.appendChild(document.createTextNode("R$ 0,00"));
+  let caixaTroco = document.getElementById("caixaTroco");
+  let labelTitulo = document.getElementById("labelTrocoTitulo");
+  let labelValor = document.getElementById("labelTrocoValor");
   caixaTroco.classList.remove("falta");
-  if (labelTrocoEl) labelTrocoEl.textContent = "Troco";
+  if (labelTitulo) labelTitulo.textContent = "Troco";
+  if (labelValor) labelValor.textContent = "R$ 0,00";
 
-  // lista estruturada
-  renderizarListaPedido(idTelaFinalizarPedidoTexto);
+  // contador de itens
+  let totalItens = listaCaixaDeTexto.length;
+  let contador = document.getElementById("contadorItens");
+  if (contador)
+    contador.textContent = totalItens + (totalItens === 1 ? " item" : " itens");
+
+  // renderiza lista agrupada com nome, quantidade e subtotal
+  let produtos = {};
+  let precos = {};
+  for (let i = 0; i < listaCaixaDeTexto.length; i++) {
+    let nome = listaCaixaDeTexto[i];
+    produtos[nome] = (produtos[nome] || 0) + 1;
+    let item = cardapio.find(function (c) {
+      return c[0] === nome;
+    });
+    if (item) precos[nome] = item[1];
+  }
+
+  let html = "";
+  for (let nome in produtos) {
+    let qtd = produtos[nome];
+    let preco = precos[nome] || 0;
+    let subtotal = qtd * preco;
+    html +=
+      "<div class='itemPedidoLinha'>" +
+      "<span class='itemNome'>" +
+      nome +
+      "</span>" +
+      "<span class='itemQtd'>x" +
+      qtd +
+      "</span>" +
+      "<span class='itemPreco'>" +
+      formatarNumero("", subtotal, "") +
+      "</span>" +
+      "</div>";
+  }
+  telaFinalizarPedidoTexto.innerHTML =
+    html ||
+    "<p style='color:var(--text-tertiary);font-size:4vw;padding:8px 0'>Nenhum item adicionado</p>";
 
   document.querySelector(idInputTroco).value = "";
   document.querySelector(idInputTroco).focus();
@@ -209,6 +221,7 @@ function apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
   let caixaDePreco = document.querySelector(idCaixaDePrecoDePedidos);
   let caixaDeTexto = document.querySelector(idCaixaDeTextoDePedidos);
 
+  // apagando o ultimo item da lista
   historicoDeInsercao = historicoDeInsercao.split(",");
   ultimoValor = historicoDeInsercao.slice(historicoDeInsercao.length - 1);
   localStorage.setItem(
@@ -218,6 +231,7 @@ function apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos) {
 
   console.log(ultimoValor);
 
+  // apagando o ultimo valor da lista
   totalPagar -= ultimoValor;
   localStorage.setItem("totalPedido", totalPagar);
 
@@ -236,24 +250,29 @@ function fecharTela(
   document.querySelector(idTelaFinalizarPedido).style.display = "none";
   document.querySelector(idCaixaHistorico).style.display = "none";
 
-  let caixaTroco = document.querySelector(idCaixaDeTextoTroco);
-  let labelTrocoEl = document.getElementById("labelTroco");
-  caixaTroco.textContent = "";
-  if (labelTrocoEl) {
-    labelTrocoEl.textContent = "Troco";
-    caixaTroco.appendChild(labelTrocoEl);
-  }
-  caixaTroco.appendChild(document.createTextNode("R$ 0,00"));
-  caixaTroco.classList.remove("falta");
+  // reseta visual do troco
+  let caixaTroco = document.getElementById("caixaTroco");
+  let labelTitulo = document.getElementById("labelTrocoTitulo");
+  let labelValor = document.getElementById("labelTrocoValor");
+  if (caixaTroco) caixaTroco.classList.remove("falta");
+  if (labelTitulo) labelTitulo.textContent = "Troco";
+  if (labelValor) labelValor.textContent = "R$ 0,00";
+  // fallback para o seletor original
+  let trocoEl = document.querySelector(idCaixaDeTextoTroco);
+  if (trocoEl) trocoEl.textContent = "R$ 0,00";
 }
 
 function formatarNumero(prefixo, numero, sufixo) {
+  //para identificar se o numero é float ou inteiro
   if (numero % 1 === 0) {
     return prefixo + "R$ " + numero + ",00" + sufixo;
-  } else if ((numero * 10) % 1 === 0) {
-    return prefixo + ("R$ " + numero + "0").replace(".", ",") + sufixo;
   } else {
-    return prefixo + ("R$ " + numero + "").replace(".", ",") + sufixo;
+    // para identificar se o numero tem 2 casas depois da vigula
+    if ((numero * 10) % 1 === 0) {
+      return prefixo + ("R$ " + numero + "0").replace(".", ",") + sufixo;
+    } else {
+      return prefixo + ("R$ " + numero + "").replace(".", ",") + sufixo;
+    }
   }
 }
 
@@ -264,6 +283,7 @@ function gerarDataAtual() {
   let ano = data.getFullYear();
   let horas = String(data.getHours()).padStart(2, "0");
   let minutos = String(data.getMinutes()).padStart(2, "0");
+
   dataAtual = dia + "/" + mes + "/" + ano + " - " + horas + ":" + minutos;
   console.log(dataAtual);
   return dataAtual;
@@ -286,26 +306,29 @@ function salvarNoHistorico(
   let caixaDeTexto = document.querySelector(
     idCaixaDeTextoDePedidos,
   ).textContent;
+  let historicoResumo;
   let totalGeral = parseFloat(localStorage.getItem("totalGeral"));
 
-  let historicoResumo = localStorage.getItem("historicoResumo");
+  historicoResumo = localStorage.getItem("historicoResumo");
   totalGeral += totalPagar;
-  historicoResumo =
-    historicoResumo == ""
-      ? caixaDeTexto
-      : historicoResumo + " + " + caixaDeTexto;
+
+  if (historicoResumo == "") {
+    historicoResumo += caixaDeTexto;
+  } else {
+    historicoResumo += " + " + caixaDeTexto;
+  }
 
   localStorage.setItem("totalGeral", totalGeral);
   localStorage.setItem("historicoResumo", historicoResumo);
 
-  // para o histórico, usa formatarLista (string simples) — não o HTML da lista visual
   listaPedido +=
     "-------- " +
     quantidadeDePedidos +
     " -------- <br> " +
     gerarDataAtual() +
     " <br> <br> ";
-  listaPedido += formatarLista(listaCaixaDeTexto, true);
+  listaPedido += document.querySelector(idTelaFinalizarPedidoTexto).innerHTML;
+
   listaPedido += formatarNumero("Total = ", totalPagar, " <br> <br> ");
   localStorage.setItem("historicoDePedidos", listaPedido);
 
@@ -341,7 +364,6 @@ function calcularTroco(
   let totalPagar = parseFloat(localStorage.getItem("totalPedido"));
   let valorRecebido = document.querySelector(idInputTroco);
   let caixaTroco = document.querySelector(idCaixaDeTextoTroco);
-  let labelTrocoEl = document.getElementById("labelTroco");
 
   let inputValue = valorRecebido.value;
   let numericValue = inputValue.replace(/[^0-9]/g, "");
@@ -369,26 +391,30 @@ function calcularTroco(
     localStorage.setItem("historicoDePedidos", "");
     localStorage.setItem("historicoResumo", "");
     localStorage.setItem("totalGeral", 0);
+
     alert("Histórico Resetado");
   }
 
   totalPagar -= numericValue;
 
-  // atualiza cor e label do troco
+  let labelTitulo = document.getElementById("labelTrocoTitulo");
+  let labelValor = document.getElementById("labelTrocoValor");
+
   if (totalPagar > 0) {
     caixaTroco.classList.add("falta");
-    if (labelTrocoEl) labelTrocoEl.textContent = "Falta";
+    if (labelTitulo) labelTitulo.textContent = "Falta";
   } else {
     caixaTroco.classList.remove("falta");
-    if (labelTrocoEl) labelTrocoEl.textContent = "Troco";
+    if (labelTitulo) labelTitulo.textContent = "Troco";
   }
 
-  // reconstrói o conteúdo preservando o span do label
-  caixaTroco.textContent = "";
-  if (labelTrocoEl) caixaTroco.appendChild(labelTrocoEl);
-  caixaTroco.appendChild(
-    document.createTextNode(formatarNumero("", totalPagar * -1, "")),
-  );
+  let valorFormatado = formatarNumero("", totalPagar * -1, "");
+  // compatibilidade: se o HTML novo existir usa labelValor, senão textContent direto
+  if (labelValor) {
+    labelValor.textContent = valorFormatado;
+  } else {
+    caixaTroco.textContent = valorFormatado;
+  }
 }
 
 function gerarHistoricoResumido() {
@@ -402,6 +428,16 @@ function gerarHistoricoResumido() {
     formatarNumero("", totalGeral, "")
   );
 }
+
+// let verificar = gerarDataAtual();
+// verificar = String(verificar).split('/');
+// let tem = String(verificar[2]).split(' - ');
+// verificar[2] = tem[0]
+// verificar[3] = tem[1].split(':')[0]
+// verificar[4] = tem[1].split(':')[1]
+// console.log(verificar);
+
+// if (!(parseInt(verificar[0]) >= 24 && parseInt(verificar[1]) >= 5 && parseInt(verificar[3]) >= 11 && parseInt(verificar[4]) >= 40)) {
 
 // ------------- principal -------------
 let container = document.getElementById("container");
@@ -423,35 +459,49 @@ let cardapio = [
   ["Antarctica", 15, "./images/alimentos/guarana_antarctica.png"],
   ["River", 10, "./images/alimentos/river.png"],
   ["Rivinho", 3, "./images/alimentos/Pitchula.png"],
+  // ["Copo refri", 2, "./images/alimentos/copo_de_refri.png"],
   ["Copo suco", 5, "./images/alimentos/copo_de_suco.png"],
   ["Jarra suco", 15, "./images/alimentos/jarra_de_suco.png"],
+  // ["Bolo pote", 7, "./images/alimentos/bolo_no_pote.png"],
   ["Água min.", 3, "./images/alimentos/Garrafa_de_água.png"],
   ["Pula pula", 7, "./images/alimentos/pula_pula.png"],
 ];
 
-// Ids principais
+// Id caixas de textos principais
 let idCaixaDeTextoDePedidos = "#caixaDeTexto>p";
 let idCaixaDePrecoDePedidos = "#caixaDePreco";
+
+// Id caixas de textos tela finalizar pedido
 let idInputTroco = "#inputPago";
 let idCaixaDeTextoTroco = "#caixaTroco";
 let idTelaFinalizarPedido = "#telaFinalizarPedido";
 let idCaixaTotal = "#caixaTotal";
 let idTelaFinalizarPedidoTexto = "#telaFinalizarPedidoTexto";
+
+// Id caixa tela histórico
 let idCaixaHistorico = "#historico";
 let idCaixaHistoricoTexto = "#textoHistorico";
+
+// Id botões pricipais
 let idBotaoResetar = "#resetar";
 let idBotaoFinalizarPedido = "#finalizarPedido";
 let idBotaoApagar = "#apagar";
+
+// Id botões tela finalizar pedidos
 let idBotaoFecharTelaDePedidos = "#botaoFechar";
 let idBotaoSalvarNoHistorico = "#botaoCalcular";
+
+// Id botões tela histórico
 let idBotaoFecharHistorico = "#botaoFecharHistorico";
 let idBotaoDownload = "#botaoDownload";
+
+// Id caixa de confirmação
 let caixaDeConfirmacaoDeSalvamento = "#caixaDeConfirmacaoDeSalvamento";
 let textoDeConfirmacao = "#textoDeConfirmacao";
 let caixaDeConfirmacao = "#caixaDeConfirmacao";
 let caixaDeConfirmacaoFechar = "#caixaDeConfirmacaoFechar";
 
-// eventos
+// adcionando eventos nos botões
 document.querySelector(idBotaoResetar).addEventListener("click", function () {
   resetarPedidos(
     idCaixaDeTextoDePedidos,
@@ -460,7 +510,6 @@ document.querySelector(idBotaoResetar).addEventListener("click", function () {
     idCaixaDeTextoTroco,
   );
 });
-
 document
   .querySelector(idBotaoFinalizarPedido)
   .addEventListener("click", function () {
@@ -472,7 +521,6 @@ document
       idInputTroco,
     );
   });
-
 document.querySelector(idBotaoApagar).addEventListener("click", function () {
   apagarPedido(idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos);
 });
@@ -487,7 +535,6 @@ document
       idCaixaDeTextoTroco,
     );
   });
-
 document
   .querySelector(idBotaoFecharTelaDePedidos)
   .addEventListener("click", function () {
@@ -498,10 +545,16 @@ document
       idCaixaDeTextoTroco,
     );
   });
-
 document
   .querySelector(idBotaoSalvarNoHistorico)
   .addEventListener("click", function () {
+    // if (
+    //   document.querySelector(idTelaFinalizarPedidoTexto).innerHTML !=
+    //   "1 -  <br> "
+    // ) {
+    //   document.querySelector(caixaDeConfirmacaoDeSalvamento).style.display =
+    //     "block";
+    // }
     salvarNoHistorico(
       idTelaFinalizarPedidoTexto,
       idInputTroco,
@@ -514,14 +567,12 @@ document
     document.querySelector(caixaDeConfirmacaoDeSalvamento).style.display =
       "none";
   });
-
 document
   .querySelector(caixaDeConfirmacaoFechar)
   .addEventListener("click", function () {
     document.querySelector(caixaDeConfirmacaoDeSalvamento).style.display =
       "none";
   });
-
 document
   .querySelector(caixaDeConfirmacao)
   .addEventListener("click", function () {
@@ -538,6 +589,9 @@ document
       "none";
   });
 
+// document.querySelector(idBotaoSalvarNoHistorico).addEventListener(   "click", function() {    salvarNoHistorico(idTelaFinalizarPedidoTexto, idInputTroco, idTelaFinalizarPedido, idCaixaHistorico, idCaixaDeTextoTroco, idCaixaDeTextoDePedidos, idCaixaDePrecoDePedidos)     });
+
+// adicionando evento de calcular no input
 document.querySelector(idInputTroco).addEventListener("keyup", function () {
   calcularTroco(
     idInputTroco,
@@ -547,6 +601,7 @@ document.querySelector(idInputTroco).addEventListener("keyup", function () {
   );
 });
 
+// adicionando função de download do histórico
 document.querySelector(idBotaoDownload).addEventListener("click", function () {
   let text = document.querySelector(idCaixaHistoricoTexto).innerHTML;
   let textoResumo = gerarHistoricoResumido();
@@ -572,7 +627,7 @@ document.querySelector(idBotaoDownload).addEventListener("click", function () {
   }, 5000);
 });
 
-// init
+// ------------------ funções -------------------
 localStorage.setItem("totalPedido", 0);
 localStorage.setItem("historicoDeInserção", "");
 
@@ -592,3 +647,5 @@ criarbotoes(
   idCaixaDePrecoDePedidos,
 );
 registerServiceWorker();
+
+// }

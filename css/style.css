@@ -14,28 +14,41 @@
 }
 
 :root {
+  /* === Fundos (Cinzas bem escuros com um leve toque azulado residual) === */
   --bg-primary: #0d1018;
   --bg-secondary: #101116;
+
+  /* === Superfícies (Matiz azul reduzido pela metade, mantendo a opacidade) === */
   --surface-0: rgba(4, 4, 10, 0.88);
   --surface-1: rgba(19, 20, 28, 0.88);
   --surface-2: rgba(25, 26, 36, 0.92);
   --surface-3: rgba(34, 36, 50, 0.85);
   --glass-border: rgba(140, 150, 180, 0.08);
-  --accent-blue: #3d70cc;
-  --accent-teal2: #e8ebec;
-  --accent-teal: #5faecf;
-  --accent-green: #34c76f;
-  --accent-red: #e05252;
-  --accent-blue-dark: #20448f;
+
+  /* === Acentos — Versões desbotadas/desaturadas dos azuis originais === */
+  --accent-blue: #3d70cc; /* Um azul bem mais sóbrio e acinzentado */
+  --accent-teal2: #e8ebec; /* Quase branco, com mínimo toque gélido */
+  --accent-teal: #5faecf; /* Ciano bem mais opaco e menos vibrante */
+  --accent-green: #34c76f; /* Mantido (verde funcional) */
+  --accent-red: #e05252; /* Mantido (vermelho funcional) */
+
+  /* Versões escuras dos acentos para gradientes */
+  --accent-blue-dark: #20448f; /* Azul escuro dessaturado */
   --accent-green-dark: #1f8a48;
   --accent-red-dark: #9e3030;
+
+  /* === Texto (Cinzas limpos com um reflexo sutil de azul) === */
   --text-primary: #f0f1f5;
   --text-secondary: rgba(180, 185, 210, 0.62);
   --text-tertiary: rgba(145, 150, 175, 0.38);
+
+  /* === Raios === */
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 22px;
   --radius-xl: 30px;
+
+  /* === Safe area === */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -50,6 +63,12 @@ body {
   padding: 0;
   min-height: 100vh;
   background-color: var(--bg-primary);
+
+  /* 
+     Substituí as superfícies escuras pelas cores de acento.
+     Usando hex+opacidade (ex: #3d70cc15 que significa 15% de opacidade) 
+     para criar o brilho suave sem estourar na tela.
+  */
   background-image:
     radial-gradient(
       ellipse 80% 50% at 20% -10%,
@@ -61,7 +80,8 @@ body {
       rgba(95, 117, 207, 0.153) 0%,
       transparent 65%
     );
-  background-attachment: fixed;
+
+  background-attachment: fixed; /* Mantém o gradiente parado enquanto você rola a página */
   color: var(--text-primary);
   font-family:
     "Nunito",
@@ -80,6 +100,7 @@ body {
   -moz-user-select: none;
   user-select: none;
   overflow-x: hidden;
+  /* min-height: 100%; */
 }
 
 /* =============================================
@@ -98,7 +119,7 @@ body {
 }
 
 /* =============================================
-   CONTAINER DE ITENS
+   CONTAINER DE ITENS — grid 3 colunas exato
    ============================================= */
 
 #container {
@@ -109,6 +130,7 @@ body {
   padding: 0 3vw 3vw;
 }
 
+/* O espaço em branco ocupa a linha inteira */
 #espaçoEmBranco {
   grid-column: 1 / -1;
   height: 47vw;
@@ -187,6 +209,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* ocupa toda a célula do grid */
   width: 100%;
   aspect-ratio: 1 / 1;
   background: var(--surface-2);
@@ -327,10 +350,10 @@ body {
   flex-direction: column;
 }
 
-/* animação de entrada */
+/* Animação de entrada */
 @keyframes slideUp {
   from {
-    transform: translateY(30px);
+    transform: translateY(24px);
     opacity: 0;
   }
   to {
@@ -342,14 +365,13 @@ body {
   animation: slideUp 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* — Cabeçalho — */
+/* — Cabeçalho da tela — */
 #headerFinalizarPedido {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px 10px;
   border-bottom: 1px solid var(--glass-border);
-  flex-shrink: 0;
 }
 
 #headerFinalizarPedido h2 {
@@ -369,15 +391,14 @@ body {
   padding: 2px 10px;
 }
 
-/* — Lista de itens (área scrollável) — */
+/* — Lista de itens — */
 #telaFinalizarPedidoTexto {
   width: 100%;
-  flex: 1;
+  height: 32%;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px 16px 8px;
   border-bottom: 1px solid var(--glass-border);
-  min-height: 0; /* essencial para flex scroll funcionar */
 }
 
 .itemPedidoLinha {
@@ -418,13 +439,13 @@ body {
   text-align: right;
 }
 
-/* — Total / Troco lado a lado (estrutura original mantida) — */
+/* — Caixas Total / Troco lado a lado — */
+
 #caixaTelaFinalizar {
   position: relative;
   width: 100%;
   height: 22vw;
   display: flex;
-  flex-shrink: 0;
 }
 
 .botoes1 {
@@ -436,6 +457,9 @@ body {
   font-weight: 800;
   letter-spacing: -0.02em;
   overflow: hidden;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 #caixaTotal {
@@ -448,12 +472,9 @@ body {
   border-right: none;
   color: var(--text-primary);
   margin-right: 1px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 1px;
 }
 
+/* Estado padrão: troco (azul) */
 #caixaTroco {
   background: linear-gradient(
     145deg,
@@ -462,26 +483,46 @@ body {
   );
   border: 1px solid rgba(74, 143, 255, 0.22);
   color: var(--accent-teal);
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 1px;
 }
 
+/* Estado: falta (vermelho) */
 #caixaTroco.falta {
+  background: linear-gradient(
+    145deg,
+    rgba(224, 82, 82, 0.2),
+    rgba(158, 48, 48, 0.15)
+  );
+  border: 1px solid rgba(224, 82, 82, 0.25);
   color: var(--accent-red);
 }
 
-.labelCaixa {
+/* — Label troco — */
+.labelTrocoBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0px;
+}
+
+.labelTrocoTitulo {
   font-size: 2.8vw;
   font-weight: 600;
-  opacity: 0.55;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  opacity: 0.6;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.labelTrocoValor {
+  font-size: 6vw;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1;
 }
 
 /* — Input — */
+
 #inputPago {
   display: block;
   width: 100%;
@@ -499,11 +540,9 @@ body {
   border-top: 1px solid var(--glass-border);
   border-bottom: 1px solid var(--glass-border);
   letter-spacing: -0.02em;
-  margin-top: 0;
-  flex-shrink: 0;
+  margin-top: 4vw;
   -webkit-user-select: text;
   user-select: text;
-  transition: background 0.15s;
 }
 
 textarea:focus,
@@ -514,22 +553,24 @@ input:focus {
 }
 
 /* — Botões Fechar / Salvar — */
+
 #caixaBotoes {
+  position: relative;
   display: flex;
   gap: 2vw;
-  padding: 3vw 3vw calc(3vw + var(--safe-bottom));
-  flex-shrink: 0;
+  padding: 3vw 3vw 0;
+  height: 19vw;
 }
 
 #caixaBotoes .botoes2 {
   position: relative;
   flex: 1;
-  height: 15vw;
+  height: 100%;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 5vw;
+  font-size: 5.5vw;
   font-weight: 700;
   letter-spacing: -0.01em;
   width: auto;
@@ -736,7 +777,7 @@ a #botaoBaixarHistorico {
 }
 
 /* =============================================
-   UTILITÁRIOS GLOBAIS
+   UTILITÁRIOS GLOBAIS .botoes2
    ============================================= */
 
 .botoes2 {
