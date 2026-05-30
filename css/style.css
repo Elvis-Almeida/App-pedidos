@@ -439,17 +439,18 @@ body {
   text-align: right;
 }
 
-/* — Caixas Total / Troco lado a lado — */
+/* — Caixas Total / Troco sobrepostas — */
 
 #caixaTelaFinalizar {
   position: relative;
   width: 100%;
   height: 22vw;
-  display: flex;
 }
 
 .botoes1 {
-  flex: 1;
+  position: absolute; /* sobreposição como no design antigo */
+  width: 55vw;
+  height: 100%;
   display: flex;
   align-items: center;
   padding-left: 5vw;
@@ -463,35 +464,24 @@ body {
 }
 
 #caixaTotal {
-  background: linear-gradient(
-    145deg,
-    rgba(50, 54, 88, 0.65),
-    rgba(35, 38, 62, 0.65)
-  );
+  left: 0;
+  background: #1e2038; /* sólido — equivale ao rgba(35, 38, 62) sem transparência */
   border: 1px solid var(--glass-border);
-  border-right: none;
   color: var(--text-primary);
-  margin-right: 1px;
+  z-index: 1;
 }
 
-/* Estado padrão: troco (azul) */
 #caixaTroco {
-  background: linear-gradient(
-    145deg,
-    rgba(74, 143, 255, 0.18),
-    rgba(42, 95, 204, 0.14)
-  );
+  right: 0;
+  border-radius: 7vw 0 0 0;
+  background: #1a2a4a; /* sólido — equivale ao azul escuro sem transparência */
   border: 1px solid rgba(74, 143, 255, 0.22);
   color: var(--accent-teal);
+  z-index: 2;
 }
 
-/* Estado: falta (vermelho) */
 #caixaTroco.falta {
-  background: linear-gradient(
-    145deg,
-    rgba(224, 82, 82, 0.2),
-    rgba(158, 48, 48, 0.15)
-  );
+  background: #3a1a1a; /* sólido — equivale ao vermelho escuro sem transparência */
   border: 1px solid rgba(224, 82, 82, 0.25);
   color: var(--accent-red);
 }
