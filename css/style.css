@@ -133,7 +133,7 @@ body {
 /* O espaço em branco ocupa a linha inteira */
 #espaçoEmBranco {
   grid-column: 1 / -1;
-  height: 47vw;
+  height: calc(47vw + var(--safe-top));
 }
 
 #espacoEmBrancoDeBaixo {
@@ -151,7 +151,7 @@ body {
   left: 0;
   right: 0;
   width: 100%;
-  height: 44vw;
+  height: calc(44vw + var(--safe-top));
   background: var(--surface-1);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
@@ -159,7 +159,7 @@ body {
   border-radius: 0 0 var(--radius-xl) 0;
   z-index: 10;
   overflow: hidden;
-  padding: 14px 16px 12px;
+  padding: calc(14px + var(--safe-top)) 16px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -370,7 +370,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 10px;
+  padding: calc(14px + var(--safe-top)) 16px 10px;
   border-bottom: 1px solid var(--glass-border);
 }
 
@@ -394,7 +394,7 @@ body {
 /* — Lista de itens — */
 #telaFinalizarPedidoTexto {
   width: 100%;
-  height: 32%;
+  height: 20%;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px 16px 8px;
