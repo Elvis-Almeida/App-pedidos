@@ -463,8 +463,8 @@ let cardapio = [
   // ["Copo refri", 2, "./images/alimentos/copo_de_refri.png"],
   ["Copo suco", 5, "./images/alimentos/copo_de_suco.png"],
   ["Jarra suco", 15, "./images/alimentos/jarra_de_suco.png"],
-  // ["Bolo pote", 7, "./images/alimentos/bolo_no_pote.png"],
   ["Água min.", 3, "./images/alimentos/Garrafa_de_água.png"],
+  ["Bolo", 5, "./images/alimentos/bolo_no_pote.png"],
   ["Pula pula", 7, "./images/alimentos/pula_pula.png"],
 ];
 
