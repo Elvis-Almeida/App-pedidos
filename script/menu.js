@@ -95,11 +95,23 @@ function renderizarResumo() {
 
   $("#painelResumo").innerHTML = `
     ${aviso}
+    <div class="cartao destaque">
+      <span class="cartaoRotulo">Total arrecadado</span>
+      <strong class="cartaoValor">${formatarDinheiro(r.arrecadado)}</strong>
+      <div class="linhaTicket">
+        <span>Ticket médio</span>
+        <strong>${formatarDinheiro(r.ticketMedio)}</strong>
+      </div>
+    </div>
     <div class="cartoes">
-      <div class="cartao destaque"><span>Total arrecadado</span><strong>${formatarDinheiro(r.arrecadado)}</strong></div>
-      <div class="cartao"><span>Pedidos</span><strong>${r.quantidadePedidos}</strong></div>
-      <div class="cartao"><span>Itens vendidos</span><strong>${r.itensVendidos}</strong></div>
-      <div class="cartao"><span>Ticket médio</span><strong>${formatarDinheiro(r.ticketMedio)}</strong></div>
+      <div class="cartao">
+        <span class="cartaoRotulo">Pedidos</span>
+        <strong class="cartaoValor">${r.quantidadePedidos.toLocaleString("pt-BR")}</strong>
+      </div>
+      <div class="cartao">
+        <span class="cartaoRotulo">Itens vendidos</span>
+        <strong class="cartaoValor">${r.itensVendidos.toLocaleString("pt-BR")}</strong>
+      </div>
     </div>
     ${r.devolvido ? `<p class="notaDevolvido">↩ ${formatarDinheiro(r.devolvido)} devolvidos a clientes (já descontados do total)</p>` : ""}
 
