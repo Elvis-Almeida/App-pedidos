@@ -450,7 +450,7 @@ let cardapio = [
   ["Espetinho", 20, "./images/alimentos/espetinho.png"],
   ["Galin. caip.", 20, "./images/alimentos/galinha_caip.png"],
   ["Misto", 5, "./images/alimentos/misto.png"],
-  ["BomBom", 5, "./images/alimentos/bombom.png"],
+  ["BomBom", 3, "./images/alimentos/bombom.png"],
   ["Açaí 250ml", 10, "./images/alimentos/acai_250ml.png"],
   ["Açaí 400ml", 15, "./images/alimentos/acai_400ml.png"],
   ["Açaí 500ml", 18, "./images/alimentos/acai_500ml.png"],
@@ -463,8 +463,8 @@ let cardapio = [
   // ["Copo refri", 2, "./images/alimentos/copo_de_refri.png"],
   ["Copo suco", 5, "./images/alimentos/copo_de_suco.png"],
   ["Jarra suco", 15, "./images/alimentos/jarra_de_suco.png"],
-  // ["Bolo pote", 7, "./images/alimentos/bolo_no_pote.png"],
   ["Água min.", 3, "./images/alimentos/Garrafa_de_água.png"],
+  ["Bolo", 5, "./images/alimentos/bolo_no_pote.png"],
   ["Pula pula", 7, "./images/alimentos/pula_pula.png"],
 ];
 
