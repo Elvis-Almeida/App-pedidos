@@ -6,7 +6,7 @@
 //  baixam tudo de novo na próxima vez que abrirem o app.
 // =============================================================
 
-const VERSAO = "v3-2026-10-09";
+const VERSAO = "v4-2026-10-09";
 const CACHE = `scj-pedidos-${VERSAO}`;
 
 // Caminhos relativos: funciona em qualquer domínio/pasta

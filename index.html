@@ -109,13 +109,27 @@
       <div class="painel rolavel" id="painelItens" role="tabpanel" hidden></div>
     </section>
 
+    <!-- ================= DEVOLVER ITENS DE UM PEDIDO SALVO ================= -->
+    <div id="devolucao" class="fundoDialogo" hidden>
+      <div class="caixaDialogo caixaDevolucao" role="dialog" aria-modal="true" aria-labelledby="devolucaoTitulo">
+        <h3 id="devolucaoTitulo">Devolver itens</h3>
+        <p>Toque em − nos itens que o cliente está devolvendo.</p>
+        <ul id="devolucaoLista"></ul>
+        <div id="devolucaoValor" class="valorDevolver" aria-live="polite"></div>
+        <div class="barraBotoes">
+          <button type="button" class="botao neutro" id="devolucaoCancelar" data-cancelar>Cancelar</button>
+          <button type="button" class="botao verde" id="devolucaoOk">Confirmar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= CONFIRMAÇÃO ================= -->
     <div id="dialogo" class="fundoDialogo" hidden>
       <div class="caixaDialogo" role="alertdialog" aria-modal="true" aria-labelledby="dialogoTitulo" aria-describedby="dialogoTexto">
         <h3 id="dialogoTitulo"></h3>
         <p id="dialogoTexto"></p>
         <div class="barraBotoes">
-          <button type="button" class="botao neutro" id="dialogoCancelar">Cancelar</button>
+          <button type="button" class="botao neutro" id="dialogoCancelar" data-cancelar>Cancelar</button>
           <button type="button" class="botao verde" id="dialogoOk">OK</button>
         </div>
       </div>

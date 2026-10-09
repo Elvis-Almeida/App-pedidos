@@ -6,7 +6,7 @@ import { CARDAPIO } from "./cardapio.js";
 import * as db from "./db.js";
 import { formatarDinheiro, reaisParaCentavos, lerValorDigitado } from "./dinheiro.js";
 import { migrarHistoricoAntigo } from "./migracao.js";
-import { abrirTela, fecharTela, telaAberta, dialogoAberto, confirmar, avisar, escaparHtml, vibrar } from "./ui.js";
+import { abrirTela, fecharTela, telaAberta, dialogoAberto, cancelarDialogo, confirmar, avisar, escaparHtml, vibrar } from "./ui.js";
 import { iniciarMenu, abrirMenu } from "./menu.js";
 
 const $ = (sel) => document.querySelector(sel);
@@ -64,20 +64,17 @@ function salvarPedidoAtual() {
 // ---------- Tela principal ----------
 
 function renderizarGrade() {
-  const visiveis = ITENS.filter((i) => !estado.ocultos.has(i.id));
-  $("#grade").innerHTML = visiveis.length
-    ? visiveis
-        .map(
-          (i) => `
-      <button type="button" class="item" data-id="${i.id}">
+  $("#grade").innerHTML = ITENS.map((i) => {
+    const esgotado = estado.ocultos.has(i.id);
+    return `
+      <button type="button" class="item${esgotado ? " esgotado" : ""}" data-id="${i.id}"
+        ${esgotado ? `aria-disabled="true" aria-label="${escaparHtml(i.nome)}, esgotado"` : ""}>
         <img src="${i.src}" alt="" width="256" height="256" decoding="async" draggable="false" />
         <span class="itemNome">${escaparHtml(i.nome)}</span>
-        <span class="itemPreco">${formatarDinheiro(i.preco)}</span>
+        <span class="itemPreco">${esgotado ? "Esgotado" : formatarDinheiro(i.preco)}</span>
         <span class="itemQtd" hidden></span>
-      </button>`,
-        )
-        .join("")
-    : `<p class="vazio">Todos os itens estão marcados como esgotados.<br>Abra o menu (5 toques no topo) → Itens.</p>`;
+      </button>`;
+  }).join("");
   renderizarPedido();
 }
 
@@ -86,9 +83,9 @@ function renderizarPedido() {
   const total = totalDoPedido();
   const qtd = estado.pedido.length;
 
-  $("#listaPedido").innerHTML = grupos.length
-    ? grupos.map((g) => `<span class="chip"><b>${g.qtd}</b>${escaparHtml(g.nome)}</span>`).join("")
-    : `<span class="dica">Toque nos itens para montar o pedido</span>`;
+  $("#listaPedido").innerHTML = grupos
+    .map((g) => `<span class="chip"><b>${g.qtd}</b>${escaparHtml(g.nome)}</span>`)
+    .join("");
   // mantém o último item adicionado visível
   $("#listaPedido").scrollTop = $("#listaPedido").scrollHeight;
 
@@ -269,7 +266,12 @@ function contarToque() {
 function ligarEventos() {
   $("#grade").addEventListener("click", (e) => {
     const botao = e.target.closest(".item");
-    if (botao) adicionarItem(botao.dataset.id);
+    if (!botao) return;
+    if (botao.classList.contains("esgotado")) {
+      avisar(`${ITEM_POR_ID.get(botao.dataset.id)?.nome} está esgotado`);
+      return;
+    }
+    adicionarItem(botao.dataset.id);
   });
 
   $("#topo").addEventListener("click", contarToque);
@@ -306,7 +308,9 @@ function ligarEventos() {
 
   // Esc fecha telas (no computador)
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !dialogoAberto() && telaAberta()) fecharTela();
+    if (e.key !== "Escape") return;
+    if (dialogoAberto()) cancelarDialogo();
+    else if (telaAberta()) fecharTela();
   });
 }
 

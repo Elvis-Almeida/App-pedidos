@@ -36,9 +36,11 @@ export function calcularResumo(pedidos) {
   const porItem = new Map();
   let arrecadado = 0;
   let itensVendidos = 0;
+  let devolvido = 0;
 
   for (const pedido of pedidos) {
     arrecadado += pedido.total;
+    for (const d of pedido.devolucoes || []) devolvido += d.valor;
     for (const item of pedido.itens) {
       itensVendidos += item.qtd;
       const atual = porItem.get(item.nome) || { nome: item.nome, qtd: 0, total: 0 };
@@ -53,6 +55,7 @@ export function calcularResumo(pedidos) {
     arrecadado,
     quantidadePedidos: pedidos.length,
     itensVendidos,
+    devolvido,
     ticketMedio: pedidos.length ? Math.round(arrecadado / pedidos.length) : 0,
     ranking,
   };
@@ -74,6 +77,7 @@ export function gerarTextoRelatorio(pedidos) {
   partes.push(`Pedidos:          ${r.quantidadePedidos}`);
   partes.push(`Itens vendidos:   ${r.itensVendidos}`);
   partes.push(`Ticket médio:     ${formatarDinheiro(r.ticketMedio)}`);
+  if (r.devolvido) partes.push(`Devolvido:        ${formatarDinheiro(r.devolvido)} (já descontado do total)`);
   partes.push("");
   partes.push("VENDAS POR ITEM");
   partes.push(linha);
@@ -88,6 +92,9 @@ export function gerarTextoRelatorio(pedidos) {
     if (p.recebido) cabecalho += ` (${textoPagamento(p)})`;
     partes.push(cabecalho);
     partes.push(`   ${textoItens(p.itens)}`);
+    for (const d of p.devolucoes || []) {
+      partes.push(`   ↩ devolvido ${formatarData(d.data)}: ${textoItens(d.itens)} · ${formatarDinheiro(d.valor)}`);
+    }
   }
   partes.push("");
   return partes.join("\r\n");

@@ -27,7 +27,8 @@ Esse app nasceu de uma dor que percebi nos eventos festivos da igreja: muitas op
 
 - **Resumo** — total arrecadado, número de pedidos, itens vendidos, ticket médio e o ranking de vendas por item. Botões para baixar ou compartilhar o relatório (.txt) e para zerar o histórico no começo de um novo evento.
 - **Pedidos** — todos os pedidos salvos. "Desfazer último pedido" tira o último do histórico e devolve os itens para a tela (para corrigir). Também dá para excluir qualquer pedido.
-- **Itens** — liga/desliga cada item. O que estiver desligado (esgotado) some da tela de vendas.
+- **Devolver item** — em cada pedido salvo. Se faltou um item e o cliente voltou para pegar o dinheiro, toque em − no item, e o app mostra quanto devolver. O item sai do pedido, o total do evento diminui e a devolução fica registrada no pedido e no relatório.
+- **Itens** — liga/desliga cada item. O que estiver desligado fica cinza na tela de vendas, marcado como **Esgotado**, e não entra no pedido.
 
 ## Dados
 

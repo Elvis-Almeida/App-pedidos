@@ -60,9 +60,9 @@ window.addEventListener("popstate", () => {
     popsParaIgnorar--;
     return;
   }
-  if (!$("#dialogo").hidden) {
-    // voltar com a confirmação aberta = cancelar
-    $("#dialogoCancelar").click();
+  if (dialogoAberto()) {
+    // voltar com uma caixa aberta = cancelar a caixa
+    cancelarDialogo();
     history.pushState({ tela: telaAberta()?.id }, "");
     return;
   }
@@ -104,8 +104,15 @@ export function confirmar({ titulo, texto = "", ok = "Confirmar", cancelar = "Ca
   });
 }
 
+/** Há alguma caixa (confirmação, devolução…) aberta? */
 export function dialogoAberto() {
-  return !$("#dialogo").hidden;
+  return !!document.querySelector(".fundoDialogo:not([hidden])");
+}
+
+/** Cancela a caixa que está por cima (a última aberta no HTML) */
+export function cancelarDialogo() {
+  const abertas = document.querySelectorAll(".fundoDialogo:not([hidden])");
+  abertas[abertas.length - 1]?.querySelector("[data-cancelar]")?.click();
 }
 
 // ---------- Avisos rápidos (toast) ----------

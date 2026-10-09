@@ -88,6 +88,12 @@ export async function adicionarVariosPedidos(pedidos) {
   });
 }
 
+/** Grava o pedido inteiro de novo (usado na devolução de itens) */
+export async function atualizarPedido(pedido) {
+  if (usandoMemoria) return void memoria.pedidos.set(pedido.id, pedido);
+  return transacao("pedidos", "readwrite", (s) => s.put(pedido));
+}
+
 export async function excluirPedido(id) {
   if (usandoMemoria) return void memoria.pedidos.delete(id);
   return transacao("pedidos", "readwrite", (s) => s.delete(id));

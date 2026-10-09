@@ -29,6 +29,7 @@ export function iniciarMenu(contexto) {
   ctx = contexto;
 
   $("#btnFecharMenu").addEventListener("click", fecharTela);
+  ligarDevolucao();
 
   document.querySelector("#telaMenu .abas").addEventListener("click", (e) => {
     const aba = e.target.closest(".aba");
@@ -45,6 +46,7 @@ export function iniciarMenu(contexto) {
     if (acao === "zerar") return zerarHistorico();
     if (acao === "desfazer") return desfazerUltimo();
     if (acao === "excluir") return excluir(Number(alvo.dataset.id));
+    if (acao === "devolver") return abrirDevolucao(Number(alvo.dataset.id));
     if (acao === "mostrarTodos") {
       await ctx.mostrarTodos();
       renderizarItens();
@@ -99,6 +101,7 @@ function renderizarResumo() {
       <div class="cartao"><span>Itens vendidos</span><strong>${r.itensVendidos}</strong></div>
       <div class="cartao"><span>Ticket médio</span><strong>${formatarDinheiro(r.ticketMedio)}</strong></div>
     </div>
+    ${r.devolvido ? `<p class="notaDevolvido">↩ ${formatarDinheiro(r.devolvido)} devolvidos a clientes (já descontados do total)</p>` : ""}
 
     <h3 class="tituloSecao">Vendas por item</h3>
     ${
@@ -182,6 +185,15 @@ function renderizarPedidos() {
             </div>
             <p class="pedidoItens">${escaparHtml(textoItens(p.itens))}</p>
             ${p.recebido ? `<p class="pedidoPagamento${p.troco < 0 ? " faltou" : ""}">${textoPagamento(p)}</p>` : ""}
+            ${(p.devolucoes || [])
+              .map(
+                (d) =>
+                  `<p class="pedidoDevolucao">↩ Devolvido ${formatarHora(d.data)}: ${escaparHtml(textoItens(d.itens))} · ${formatarDinheiro(d.valor)}</p>`,
+              )
+              .join("")}
+            <button type="button" class="botao contorno pequeno botaoDevolver" data-acao="devolver" data-id="${p.id}">
+              ↩ Devolver item
+            </button>
           </li>`,
             )
             .join("")}</ul>`
@@ -232,6 +244,122 @@ async function excluir(id) {
   });
 }
 
+// ---------- Devolver itens de um pedido já salvo ----------
+// Ex.: o cliente pagou 2 Caldos, só tinha 1 e voltou para pegar o dinheiro.
+// O item sai do pedido, o total diminui e fica registrada a devolução.
+
+let edicao = null; // { pedido, devolver: number[] }  (qtd devolvida por linha)
+
+function abrirDevolucao(id) {
+  const pedido = pedidos.find((p) => p.id === id);
+  if (!pedido) return;
+  edicao = { pedido, devolver: pedido.itens.map(() => 0) };
+  $("#devolucaoTitulo").textContent = `Devolver itens do pedido #${pedido.numero}`;
+  renderizarDevolucao();
+  $("#devolucao").hidden = false;
+  $("#devolucaoCancelar").focus({ preventScroll: true });
+}
+
+function fecharDevolucao() {
+  $("#devolucao").hidden = true;
+  edicao = null;
+}
+
+function valorDevolvido() {
+  return edicao.pedido.itens.reduce((soma, item, i) => soma + item.preco * edicao.devolver[i], 0);
+}
+
+function renderizarDevolucao() {
+  const { pedido, devolver } = edicao;
+  $("#devolucaoLista").innerHTML = pedido.itens
+    .map((item, i) => {
+      const fica = item.qtd - devolver[i];
+      return `
+      <li class="${devolver[i] ? "comDevolucao" : ""}">
+        <span class="devNome">${escaparHtml(item.nome)}
+          <small>${formatarDinheiro(item.preco)} cada${devolver[i] ? ` · <b>devolver ${devolver[i]}</b>` : ""}</small>
+        </span>
+        <span class="contador">
+          <button type="button" class="botaoIcone pequeno" data-mudar="-1" data-linha="${i}" aria-label="Devolver um ${escaparHtml(item.nome)}" ${fica === 0 ? "disabled" : ""}>−</button>
+          <span class="contadorValor" aria-label="Fica no pedido">${fica}</span>
+          <button type="button" class="botaoIcone pequeno" data-mudar="1" data-linha="${i}" aria-label="Manter um ${escaparHtml(item.nome)}" ${devolver[i] === 0 ? "disabled" : ""}>+</button>
+        </span>
+      </li>`;
+    })
+    .join("");
+
+  const valor = valorDevolvido();
+  const tudo = devolver.every((d, i) => d === pedido.itens[i].qtd);
+  $("#devolucaoValor").innerHTML = valor
+    ? `<span>Devolver ao cliente</span><strong>${formatarDinheiro(valor)}</strong>`
+    : `<span>Nenhum item selecionado</span>`;
+  $("#devolucaoValor").classList.toggle("ativo", valor > 0);
+
+  const ok = $("#devolucaoOk");
+  ok.disabled = valor === 0;
+  ok.textContent = tudo ? "Devolver tudo" : "Confirmar";
+}
+
+async function confirmarDevolucao() {
+  if (!edicao) return;
+  const { pedido, devolver } = edicao;
+  const valor = valorDevolvido();
+  if (!valor) return;
+
+  const itensDevolvidos = pedido.itens
+    .map((item, i) => ({ nome: item.nome, preco: item.preco, qtd: devolver[i] }))
+    .filter((i) => i.qtd > 0);
+  const itensQueFicam = pedido.itens
+    .map((item, i) => ({ ...item, qtd: item.qtd - devolver[i] }))
+    .filter((i) => i.qtd > 0);
+  const anterior = structuredClone(pedido);
+  fecharDevolucao();
+
+  // Devolveu tudo: o pedido deixa de existir
+  if (!itensQueFicam.length) {
+    await db.excluirPedido(pedido.id);
+    await recarregar();
+    avisar(`Pedido #${pedido.numero} devolvido inteiro · ${formatarDinheiro(valor)}`, {
+      acao: "Desfazer",
+      aoAgir: async () => {
+        await db.adicionarPedido(anterior);
+        await recarregar();
+      },
+    });
+    return;
+  }
+
+  await db.atualizarPedido({
+    ...pedido,
+    itens: itensQueFicam,
+    total: pedido.total - valor,
+    devolucoes: [...(pedido.devolucoes || []), { data: new Date().toISOString(), itens: itensDevolvidos, valor }],
+  });
+  await recarregar();
+  avisar(`Devolva ${formatarDinheiro(valor)} ao cliente`, {
+    acao: "Desfazer",
+    aoAgir: async () => {
+      await db.atualizarPedido(anterior);
+      await recarregar();
+    },
+  });
+}
+
+function ligarDevolucao() {
+  $("#devolucaoLista").addEventListener("click", (e) => {
+    const botao = e.target.closest("[data-mudar]");
+    if (!botao || !edicao) return;
+    const i = Number(botao.dataset.linha);
+    const max = edicao.pedido.itens[i].qtd;
+    // "-" tira do pedido (devolve mais um); "+" coloca de volta
+    edicao.devolver[i] = Math.min(max, Math.max(0, edicao.devolver[i] - Number(botao.dataset.mudar)));
+    renderizarDevolucao();
+  });
+  $("#devolucaoCancelar").addEventListener("click", fecharDevolucao);
+  $("#devolucaoOk").addEventListener("click", confirmarDevolucao);
+  $("#devolucao").addEventListener("click", (e) => e.target.id === "devolucao" && fecharDevolucao());
+}
+
 // ---------- Aba Itens (esgotados) ----------
 
 function renderizarItens() {
@@ -243,7 +371,7 @@ function renderizarItens() {
       <span>${disponiveis} de ${ctx.itens.length} disponíveis</span>
       ${ocultos.size ? `<button type="button" class="botao contorno pequeno" data-acao="mostrarTodos">Mostrar todos</button>` : ""}
     </div>
-    <p class="dicaMenu">Desligue o que acabou: o item some da tela de vendas.</p>
+    <p class="dicaMenu">Desligue o que acabou: o item fica cinza, marcado como esgotado, na tela de vendas.</p>
     <ul class="listaItens">
       ${ctx.itens
         .map((i) => {
