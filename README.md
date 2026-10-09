@@ -1,33 +1,52 @@
 # App de pedidos
 
-### Esse app é um **Web App** simples com funções que ajudam quem vende com dinheiro, facilitando também no troco
+### Um **Web App** simples para quem vende com dinheiro em eventos: monta o pedido, soma o total e calcula o troco
 
 <table>
   <tr>
-    <td>
-        <img src='./images/screenshots/f4.jpeg' width='100%'>
-    </td>
-    <td>
-        <img src='./images/screenshots/f1.jpeg' width='100%'>
-    </td>
-    <td>
-        <img src='./images/screenshots/f2.jpeg' width='100%'>
-    </td>
-    <td>
-        <img src='./images/screenshots/f3.jpeg' width='100%'>
-    </td>
+    <td><img src='./images/screenshots/f4.jpeg' width='100%'></td>
+    <td><img src='./images/screenshots/f1.jpeg' width='100%'></td>
+    <td><img src='./images/screenshots/f2.jpeg' width='100%'></td>
+    <td><img src='./images/screenshots/f3.jpeg' width='100%'></td>
   </tr>
 </table>
 
-Esse app foi desenvolvido com o intuito de resolver uma dor que percebi durante eventos festivos na igreja, onde haviam varias opções de vendas com vários preços diferentes, muitas pessoas para atender e muitas vezes os pedidos que as pessoas faziam eram estensos dificultando ainda mais a venda e o cálculo para o troco da mesma.
+Esse app nasceu de uma dor que percebi nos eventos festivos da igreja: muitas opções de venda com preços diferentes, muita gente para atender e pedidos longos, o que dificultava somar o total e calcular o troco.
 
-Vendo isso tive a ideia de criar esse app que solucionace essa dor, onde: 
- - Possui toda a lista de itens a venda (*podendo quem está vendendo consultar a lista caso esqueça de algo*)
- - Ao clicar em um item da lista o item é mostrado na janela superior e é mostrado por quantidade (*facilitando a visualização de pedidos longos*), e ao mesmo tempo o valor do pedido já é calculado e mostrado (*evitando do vendedor ter que fazer o cálculo do total, ajudando bastante em pedidos longos*)
- - Possui botão de **Apagar** item caso não queira o item no pedido e o botão de **Resetar** para apagar todo o pedido.
- - Ao clicar em **Finalizar** abrirá uma nova janela no qual aparecerá os itens pedidos e o total de forma mais clara, e um campo para a inserção do valor recebido, que quando digitado esse valor, automaticamente é mostrado o valor do troco, ao lado do total, que deve ser dado ao cliente.
- - Além disso tem a função de salvar os pedidos em um histórico que salva a data, hora, itens e valor total do pedido (*esse histórico pode ser acessado digitando na caixa do valor recebido o código `4321` e para apagar todo o historico você pode digitar o código `0000000000000`*).
- - Ao clicar e segurar por 3 segundos encima de um item, ele é apagado da lista (*caso algum item tenha acabado e queira remove-lo, e para voltar os itens apagados para a tela novamente basta digitar o código `11111`*).
+## Como usar
 
-Espero que tenha gostado dessa ideia e quero com o tempo melhorar esse projeto. Você pode acessar o app funcionando por esse link [App](https://elvis-almeida.github.io/App-pedidos/) (*caso abra o link pelo PC ele não está adptado para funcionar neles, mas você pode redimencionar a janela para que veja de forma correta*)
+- **Toque nos itens** para montar o pedido. O topo mostra cada item com a quantidade e o total já somado; cada card mostra quantas unidades estão no pedido.
+- **Apagar** tira o último item tocado. **Resetar** limpa o pedido (aparece um botão "Desfazer" por alguns segundos).
+- **Finalizar** abre o resumo. Digite o valor recebido ou toque nas notas (+2, +5, +10, +20, +50, +100, "Exato") e o troco aparece na hora (ou quanto falta, em vermelho).
+- **Salvar** guarda o pedido no histórico com data, hora, itens, valor recebido e troco.
+- O pedido em andamento não se perde se o app fechar ou o celular reiniciar.
 
+## Menu secreto
+
+**Toque 5 vezes rápido no topo da tela** (área do pedido). O menu tem três abas:
+
+- **Resumo** — total arrecadado, número de pedidos, itens vendidos, ticket médio e o ranking de vendas por item. Botões para baixar ou compartilhar o relatório (.txt) e para zerar o histórico no começo de um novo evento.
+- **Pedidos** — todos os pedidos salvos. "Desfazer último pedido" tira o último do histórico e devolve os itens para a tela (para corrigir). Também dá para excluir qualquer pedido.
+- **Itens** — liga/desliga cada item. O que estiver desligado (esgotado) some da tela de vendas.
+
+## Dados
+
+Tudo fica salvo **no próprio aparelho** (IndexedDB), funciona sem internet e não vai para nenhum servidor. Cada celular tem o seu próprio histórico. Na primeira abertura desta versão, o histórico da versão antiga é importado automaticamente.
+
+## Para quem mantém o app
+
+- **Cardápio e preços:** `script/cardapio.js`. Imagens em `images/alimentos/` (WebP, ~256 px).
+- **Ao publicar qualquer mudança**, aumente a `VERSAO` em `sw.js`, senão os celulares que já instalaram o app continuam com a versão antiga.
+- Sem build: é só HTML, CSS e JavaScript (módulos ES). Para testar no computador, rode um servidor local (ex.: `python3 -m http.server`) e abra `http://localhost:8000` — abrir o `index.html` direto não funciona por causa dos módulos.
+
+| Arquivo | O que faz |
+| --- | --- |
+| `script/app.js` | Tela principal e finalizar pedido |
+| `script/menu.js` | Menu secreto (resumo, pedidos, itens) |
+| `script/db.js` | Banco local (IndexedDB) |
+| `script/relatorio.js` | Totais e arquivo do relatório |
+| `script/migracao.js` | Importa o histórico da versão antiga |
+| `script/ui.js` | Telas, confirmações e avisos |
+| `script/dinheiro.js` | Formatação de valores (em centavos) |
+
+Acesse o app: [elvisalmeida.com.br](https://elvisalmeida.com.br/)

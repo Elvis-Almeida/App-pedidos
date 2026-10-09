@@ -2,106 +2,131 @@
 <html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
-    <!-- Impede zoom e double-tap zoom no iOS -->
+    <!-- Sem zoom (evita zoom sem querer na correria do atendimento) -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
 
-    <!-- PWA / iOS Safari -->
+    <!-- PWA / iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="SCJ Pedidos" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="theme-color" content="#0a0a0f" />
+    <meta name="theme-color" content="#0d1018" />
     <meta name="format-detection" content="telephone=no" />
+    <meta name="description" content="App de controle de pedidos e troco para vendas em eventos" />
 
-    <link rel="shortcut icon" href="./images/favicon.png" type="image/x-icon" />
-    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="icon" href="./images/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.json" />
+    <link rel="preload" href="./fonts/nunito-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./css/style.css" />
     <title>SCJ - Pedidos</title>
-
-    <style>
-      /* Impede double-tap zoom e scroll indesejado globalmente no iOS */
-      html {
-        touch-action: manipulation;
-      }
-    </style>
   </head>
   <body>
-    <div id="historico">
-      <div id="textoHistorico"></div>
-      <div id="botoesHistorico">
-        <div class="botoes2" id="botaoFecharHistorico">Fechar</div>
-        <a id="botaoDownload"
-          ><div class="botoes2" id="botaoBaixarHistorico">Baixar</div></a
-        >
+    <!-- ================= TELA PRINCIPAL ================= -->
+    <header id="topo" aria-label="Pedido atual">
+      <div id="listaPedido" aria-live="polite"></div>
+      <div id="caixaTotal">
+        <span class="rotulo" id="qtdItens">0 itens</span>
+        <strong id="valorTotal">R$ 0,00</strong>
       </div>
-    </div>
+    </header>
 
-    <div id="caixaDeConfirmacaoDeSalvamento">
-      <p id="textoDeConfirmacao">Tem certeza que deseja salvar?</p>
-      <div class="botoes2 botoesconfirmacao" id="caixaDeConfirmacao">Sim</div>
-      <div class="botoes2 botoesconfirmacao" id="caixaDeConfirmacaoFechar">
-        Não
-      </div>
-    </div>
+    <main id="grade" aria-label="Cardápio"></main>
 
-    <div id="telaFinalizarPedido">
-      <!-- Cabeçalho -->
-      <div id="headerFinalizarPedido">
-        <h2>Resumo do Pedido</h2>
-        <span id="contadorItens">0 itens</span>
-      </div>
+    <nav id="barraAcoes" class="barraInferior">
+      <button type="button" class="botao azul" id="btnResetar">Resetar</button>
+      <button type="button" class="botao verde" id="btnFinalizar">Finalizar</button>
+      <button type="button" class="botao vermelho" id="btnApagar">Apagar</button>
+    </nav>
 
-      <!-- Lista de itens -->
-      <div id="telaFinalizarPedidoTexto"></div>
+    <!-- ================= FINALIZAR PEDIDO ================= -->
+    <section id="telaFinalizar" class="tela" role="dialog" aria-modal="true" aria-labelledby="tituloFinalizar" hidden>
+      <header class="telaTopo">
+        <h2 id="tituloFinalizar">Resumo do pedido</h2>
+        <span class="pilula" id="contadorItens">0 itens</span>
+      </header>
 
-      <!-- Total e Troco lado a lado -->
-      <div id="caixaTelaFinalizar">
-        <div class="botoes1" id="caixaTotal">R$ 0,00</div>
-        <div class="botoes1" id="caixaTroco">
-          <div class="labelTrocoBox">
-            <span class="labelTrocoTitulo" id="labelTrocoTitulo">Troco</span>
-            <span class="labelTrocoValor" id="labelTrocoValor">R$ 0,00</span>
-          </div>
+      <div id="listaResumo" class="rolavel"></div>
+
+      <div id="caixasValores">
+        <div id="boxTotal">
+          <span class="rotulo">Total</span>
+          <strong id="finTotal">R$ 0,00</strong>
+        </div>
+        <div id="boxTroco">
+          <span class="rotulo" id="rotuloTroco">Troco</span>
+          <strong id="finTroco">—</strong>
         </div>
       </div>
 
-      <!-- Input -->
+      <label class="somenteLeitor" for="inputPago">Valor recebido</label>
       <input
-        placeholder="Digite o valor"
-        type="tel"
-        name="inputPago"
         id="inputPago"
-        inputmode="numeric"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        enterkeyhint="done"
+        placeholder="Valor recebido"
       />
 
-      <!-- Botões -->
-      <div id="caixaBotoes">
-        <div class="botoes2" id="botaoFechar">Fechar</div>
-        <div class="botoes2" id="botaoCalcular">Salvar</div>
+      <div id="notasRapidas" aria-label="Somar nota recebida">
+        <button type="button" class="nota" data-valor="2">+2</button>
+        <button type="button" class="nota" data-valor="5">+5</button>
+        <button type="button" class="nota" data-valor="10">+10</button>
+        <button type="button" class="nota" data-valor="20">+20</button>
+        <button type="button" class="nota" data-valor="50">+50</button>
+        <button type="button" class="nota" data-valor="100">+100</button>
+        <button type="button" class="nota especial" id="btnExato">Exato</button>
+        <button type="button" class="nota especial" id="btnLimparPago">Limpar</button>
+      </div>
+
+      <div class="barraBotoes">
+        <button type="button" class="botao vermelho" id="btnVoltar">Voltar</button>
+        <button type="button" class="botao verde largo" id="btnSalvar">Salvar</button>
+      </div>
+    </section>
+
+    <!-- ================= MENU SECRETO (5 toques no topo) ================= -->
+    <section id="telaMenu" class="tela" role="dialog" aria-modal="true" aria-labelledby="tituloMenu" hidden>
+      <header class="telaTopo">
+        <h2 id="tituloMenu">Menu</h2>
+        <button type="button" class="botaoIcone" id="btnFecharMenu" aria-label="Fechar menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+
+      <div class="abas" role="tablist">
+        <button type="button" role="tab" class="aba" data-aba="Resumo" aria-selected="true">Resumo</button>
+        <button type="button" role="tab" class="aba" data-aba="Pedidos" aria-selected="false">Pedidos</button>
+        <button type="button" role="tab" class="aba" data-aba="Itens" aria-selected="false">Itens</button>
+      </div>
+
+      <div class="painel rolavel" id="painelResumo" role="tabpanel"></div>
+      <div class="painel rolavel" id="painelPedidos" role="tabpanel" hidden></div>
+      <div class="painel rolavel" id="painelItens" role="tabpanel" hidden></div>
+    </section>
+
+    <!-- ================= CONFIRMAÇÃO ================= -->
+    <div id="dialogo" class="fundoDialogo" hidden>
+      <div class="caixaDialogo" role="alertdialog" aria-modal="true" aria-labelledby="dialogoTitulo" aria-describedby="dialogoTexto">
+        <h3 id="dialogoTitulo"></h3>
+        <p id="dialogoTexto"></p>
+        <div class="barraBotoes">
+          <button type="button" class="botao neutro" id="dialogoCancelar">Cancelar</button>
+          <button type="button" class="botao verde" id="dialogoOk">OK</button>
+        </div>
       </div>
     </div>
 
-    <div id="caixaDeTexto">
-      <p></p>
-      <div id="caixaDePreco">R$ 0,00</div>
+    <!-- ================= AVISOS ================= -->
+    <div id="toast" role="status" aria-live="polite" hidden>
+      <span id="toastTexto"></span>
+      <button type="button" id="toastAcao" hidden></button>
     </div>
 
-    <div id="botoesDeControle">
-      <div class="botoes" id="resetar">Resetar</div>
-      <div class="botoes" id="finalizarPedido">Finalizar</div>
-      <div class="botoes" id="apagar">Apagar</div>
-    </div>
-
-    <div id="container"></div>
-
-    <script src="./script/script.js"></script>
+    <script type="module" src="./script/app.js"></script>
   </body>
 </html>

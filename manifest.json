@@ -1,34 +1,17 @@
 {
-  "short_name": "SCJ - Pedidos",
+  "id": "./",
   "name": "SCJ - Pedidos",
-  "description": "App de controle e manuseio de pedidos",
-  "icons": [
-    {
-      "src": "https://i.ibb.co/8rq786J/iconeApp.png",
-      "type": "image/png",
-      "sizes": "192x192",
-      "purpose":"any maskable"
-    },
-    {
-      "src": "https://i.ibb.co/8rq786J/iconeApp.png",
-      "type": "image/png",
-      "sizes": "192x192",
-      "purpose":"any maskable"
-    }
-  ],
-  "start_url": ".",
-  "background_color": "#f1f9ff",
+  "short_name": "SCJ Pedidos",
+  "description": "App de controle de pedidos e troco para vendas em eventos",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
   "display": "fullscreen",
   "orientation": "portrait-primary",
-  "theme_color": "#354b5a",
-  "shortcuts": [
-    {
-      "short_name": "SCJ - Pedidos",
-      "name": "SCJ - Pedidos",
-      "description": "App de controle e manuseio de pedidos",
-      "url": "?source=pwa",
-      "icons": [{ "src": "https://i.ibb.co/8rq786J/iconeApp.png", "sizes": "192x192" }]
-    }
+  "background_color": "#0d1018",
+  "theme_color": "#0d1018",
+  "icons": [
+    { "src": "images/icone-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "images/icone-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" }
   ]
-
 }
