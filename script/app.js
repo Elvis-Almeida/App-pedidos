@@ -8,6 +8,7 @@ import { formatarDinheiro, reaisParaCentavos, lerValorDigitado } from "./dinheir
 import { migrarHistoricoAntigo } from "./migracao.js";
 import { abrirTela, fecharTela, telaAberta, dialogoAberto, cancelarDialogo, confirmar, avisar, escaparHtml, vibrar } from "./ui.js";
 import { iniciarMenu, abrirMenu } from "./menu.js";
+import { PIX_PADRAO, erroConfiguracao, payloadDoPedido, qrSvg } from "./pix.js";
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -40,7 +41,12 @@ const estado = {
   /** valor recebido na tela Finalizar, em centavos */
   recebido: 0,
   salvando: false,
+  /** configuração do Pix (menu secreto → aba Pix) */
+  pix: { ...PIX_PADRAO },
 };
+
+/** Pix ligado e com chave/nome válidos? */
+const pixPronto = () => estado.pix.ativo && !erroConfiguracao(estado.pix);
 
 function agruparPedido(ids = estado.pedido) {
   const grupos = new Map();
@@ -165,9 +171,30 @@ function abrirFinalizar() {
     )
     .join("");
   $("#finTotal").textContent = formatarDinheiro(totalDoPedido());
+  prepararPix();
   definirRecebido(0);
   abrirTela($("#telaFinalizar"));
   $("#listaResumo").scrollTop = 0;
+}
+
+// ---------- Pix no Finalizar ----------
+// O QR aparece sozinho com o valor do pedido. Se a pessoa digitar ou tocar
+// numa nota (pagamento em dinheiro), o QR some e a tela volta ao normal.
+
+function prepararPix() {
+  const usar = pixPronto();
+  $("#telaFinalizar").classList.toggle("comPix", usar);
+  if (!usar) return;
+  const total = totalDoPedido();
+  $("#qrPix").innerHTML = qrSvg(payloadDoPedido(estado.pix, total));
+  $("#valorPix").textContent = formatarDinheiro(total);
+  $("#recebedorPix").textContent = estado.pix.nome;
+}
+
+function atualizarModoPix() {
+  const mostrar = pixPronto() && estado.recebido === 0;
+  $("#areaPix").hidden = !mostrar;
+  $("#btnPagoPix").hidden = !mostrar;
 }
 
 function definirRecebido(centavos, { atualizarCampo = true } = {}) {
@@ -184,6 +211,7 @@ function definirRecebido(centavos, { atualizarCampo = true } = {}) {
 }
 
 function atualizarTroco() {
+  atualizarModoPix();
   const total = totalDoPedido();
   const box = $("#boxTroco");
   const diferenca = estado.recebido - total;
@@ -208,11 +236,13 @@ async function proximoNumero() {
   return pedidos.reduce((max, p) => Math.max(max, p.numero || 0), 0) + 1;
 }
 
-async function salvarPedido() {
+/** @param {"dinheiro"|"pix"} forma */
+async function salvarPedido(forma = "dinheiro") {
   if (estado.salvando || !estado.pedido.length) return;
   const total = totalDoPedido();
+  const pix = forma === "pix";
 
-  if (estado.recebido > 0 && estado.recebido < total) {
+  if (!pix && estado.recebido > 0 && estado.recebido < total) {
     const seguir = await confirmar({
       titulo: `Falta ${formatarDinheiro(total - estado.recebido)}`,
       texto: "O valor recebido é menor que o total. Salvar mesmo assim?",
@@ -229,16 +259,17 @@ async function salvarPedido() {
       data: new Date().toISOString(),
       itens: agruparPedido().map((g) => ({ nome: g.nome, preco: g.preco, qtd: g.qtd })),
       total,
-      recebido: estado.recebido || null,
+      forma,
+      recebido: !pix && estado.recebido ? estado.recebido : null,
       // negativo = faltou dinheiro
-      troco: estado.recebido ? estado.recebido - total : null,
+      troco: !pix && estado.recebido ? estado.recebido - total : null,
     });
     estado.pedido = [];
     renderizarPedido();
     salvarPedidoAtual();
     fecharTela();
     vibrar(30);
-    avisar(`Pedido #${numero} salvo · ${formatarDinheiro(total)}`);
+    avisar(`Pedido #${numero} salvo · ${formatarDinheiro(total)}${pix ? " no Pix" : ""}`);
   } catch (erro) {
     console.error(erro);
     avisar("Não foi possível salvar o pedido. Tente de novo.");
@@ -281,7 +312,8 @@ function ligarEventos() {
   $("#btnApagar").addEventListener("click", apagarUltimo);
 
   $("#btnVoltar").addEventListener("click", fecharTela);
-  $("#btnSalvar").addEventListener("click", salvarPedido);
+  $("#btnSalvar").addEventListener("click", () => salvarPedido("dinheiro"));
+  $("#btnPagoPix").addEventListener("click", () => salvarPedido("pix"));
 
   const campo = $("#inputPago");
   campo.addEventListener("input", () => {
@@ -295,7 +327,7 @@ function ligarEventos() {
   campo.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       campo.blur();
-      salvarPedido();
+      salvarPedido("dinheiro");
     }
   });
 
@@ -335,6 +367,7 @@ async function iniciar() {
   if (migrados) avisar(`${plural(migrados, "pedido antigo importado", "pedidos antigos importados")}`);
 
   estado.ocultos = new Set(await db.lerConfig("itensOcultos", []));
+  estado.pix = { ...PIX_PADRAO, ...(await db.lerConfig("pix", {})) };
   const salvo = await db.lerConfig("pedidoAtual", []);
   estado.pedido = salvo.filter((id) => ITEM_POR_ID.has(id));
 
@@ -350,6 +383,11 @@ async function iniciar() {
       estado.ocultos.clear();
       await db.salvarConfig("itensOcultos", []);
       renderizarGrade();
+    },
+    getPix: () => estado.pix,
+    async salvarPix(config) {
+      estado.pix = { ...PIX_PADRAO, ...config };
+      await db.salvarConfig("pix", estado.pix);
     },
     /** Usado pelo "Desfazer último pedido": devolve os itens para a tela */
     restaurarNaTela(itens) {

@@ -16,6 +16,8 @@ import {
   podeCompartilhar,
 } from "./relatorio.js";
 
+import { TIPOS_CHAVE, normalizarChave, erroConfiguracao, gerarPayload, qrSvg } from "./pix.js";
+
 const $ = (sel) => document.querySelector(sel);
 
 let ctx = null; // funções/dados vindos do app.js
@@ -30,6 +32,7 @@ export function iniciarMenu(contexto) {
 
   $("#btnFecharMenu").addEventListener("click", fecharTela);
   ligarDevolucao();
+  ligarPix();
 
   document.querySelector("#telaMenu .abas").addEventListener("click", (e) => {
     const aba = e.target.closest(".aba");
@@ -77,10 +80,10 @@ function mostrarAba(nome) {
   document.querySelectorAll("#telaMenu .aba").forEach((aba) => {
     aba.setAttribute("aria-selected", String(aba.dataset.aba === nome));
   });
-  for (const painel of ["Resumo", "Pedidos", "Itens"]) {
+  for (const painel of ["Resumo", "Pedidos", "Itens", "Pix"]) {
     $(`#painel${painel}`).hidden = painel !== nome;
   }
-  ({ Resumo: renderizarResumo, Pedidos: renderizarPedidos, Itens: renderizarItens })[nome]();
+  ({ Resumo: renderizarResumo, Pedidos: renderizarPedidos, Itens: renderizarItens, Pix: renderizarPix })[nome]();
   $(`#painel${nome}`).scrollTop = 0;
 }
 
@@ -98,9 +101,14 @@ function renderizarResumo() {
     <div class="cartao destaque">
       <span class="cartaoRotulo">Total arrecadado</span>
       <strong class="cartaoValor">${formatarDinheiro(r.arrecadado)}</strong>
-      <div class="linhaTicket">
-        <span>Ticket médio</span>
-        <strong>${formatarDinheiro(r.ticketMedio)}</strong>
+      <div class="rodapeDestaque">
+        ${
+          r.porForma.pix
+            ? `<div class="linhaTicket"><span>Em dinheiro</span><strong>${formatarDinheiro(r.porForma.dinheiro)}</strong></div>
+               <div class="linhaTicket"><span>No Pix</span><strong class="corPix">${formatarDinheiro(r.porForma.pix)}</strong></div>`
+            : ""
+        }
+        <div class="linhaTicket"><span>Ticket médio</span><strong>${formatarDinheiro(r.ticketMedio)}</strong></div>
       </div>
     </div>
     <div class="cartoes">
@@ -196,7 +204,13 @@ function renderizarPedidos() {
               <button type="button" class="botaoIcone pequeno" data-acao="excluir" data-id="${p.id}" aria-label="Excluir pedido ${p.numero}">${ICONE_LIXO}</button>
             </div>
             <p class="pedidoItens">${escaparHtml(textoItens(p.itens))}</p>
-            ${p.recebido ? `<p class="pedidoPagamento${p.troco < 0 ? " faltou" : ""}">${textoPagamento(p)}</p>` : ""}
+            ${
+              p.forma === "pix"
+                ? `<p class="pedidoPagamento pagoPix">Pago no Pix</p>`
+                : p.recebido
+                  ? `<p class="pedidoPagamento${p.troco < 0 ? " faltou" : ""}">${textoPagamento(p)}</p>`
+                  : ""
+            }
             ${(p.devolucoes || [])
               .map(
                 (d) =>
@@ -303,7 +317,7 @@ function renderizarDevolucao() {
   const valor = valorDevolvido();
   const tudo = devolver.every((d, i) => d === pedido.itens[i].qtd);
   $("#devolucaoValor").innerHTML = valor
-    ? `<span>Devolver ao cliente</span><strong>${formatarDinheiro(valor)}</strong>`
+    ? `<span>Devolver ao cliente${pedido.forma === "pix" ? " <small>(pago no Pix)</small>" : ""}</span><strong>${formatarDinheiro(valor)}</strong>`
     : `<span>Nenhum item selecionado</span>`;
   $("#devolucaoValor").classList.toggle("ativo", valor > 0);
 
@@ -400,4 +414,140 @@ function renderizarItens() {
         })
         .join("")}
     </ul>`;
+}
+
+// ---------- Aba Pix ----------
+// Liga o QR Code Pix na tela Finalizar e guarda a chave de quem recebe.
+
+let timerSalvarPix;
+
+function lerFormularioPix() {
+  return {
+    ativo: $("#pixAtivo").checked,
+    tipo: $("#pixTipo").value,
+    chave: $("#pixChave").value,
+    nome: $("#pixNome").value,
+    cidade: $("#pixCidade").value,
+  };
+}
+
+const MODO_TECLADO = { cpf: "numeric", celular: "tel", email: "email", aleatoria: "text" };
+const EXEMPLO_CHAVE = {
+  cpf: "000.000.000-00",
+  celular: "(11) 98765-4321",
+  email: "nome@exemplo.com",
+  aleatoria: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+};
+
+function renderizarPix() {
+  const c = ctx.getPix();
+  $("#painelPix").innerHTML = `
+    <label class="opcaoPix">
+      <span class="nomeItem">QR Code Pix no fim do pedido
+        <small>Aparece sozinho na tela Finalizar, já com o valor. Se digitar um valor em dinheiro, ele some.</small>
+      </span>
+      <input type="checkbox" role="switch" id="pixAtivo" ${c.ativo ? "checked" : ""} />
+      <span class="chave" aria-hidden="true"></span>
+    </label>
+
+    <div class="formPix">
+      <label class="campo">
+        <span>Tipo de chave</span>
+        <select id="pixTipo">
+          ${Object.entries(TIPOS_CHAVE)
+            .map(([valor, nome]) => `<option value="${valor}" ${c.tipo === valor ? "selected" : ""}>${nome}</option>`)
+            .join("")}
+        </select>
+      </label>
+      <label class="campo">
+        <span>Chave Pix</span>
+        <input id="pixChave" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+          inputmode="${MODO_TECLADO[c.tipo]}" placeholder="${EXEMPLO_CHAVE[c.tipo]}" value="${escaparHtml(c.chave)}" />
+      </label>
+      <label class="campo">
+        <span>Nome de quem recebe</span>
+        <input id="pixNome" type="text" maxlength="25" autocomplete="off" placeholder="Ex.: Paróquia São José" value="${escaparHtml(c.nome)}" />
+        <small>Até 25 letras. Aparece no app do banco de quem paga.</small>
+      </label>
+      <label class="campo">
+        <span>Cidade</span>
+        <input id="pixCidade" type="text" maxlength="15" autocomplete="off" placeholder="Ex.: Recife" value="${escaparHtml(c.cidade)}" />
+      </label>
+    </div>
+
+    <p id="pixStatus" class="statusPix" aria-live="polite"></p>
+
+    <div id="pixTeste" class="testePix" hidden>
+      <div id="pixTesteQr" class="qrPix"></div>
+      <p><strong>Teste antes do evento</strong>Leia este QR de <b>R$ 1,00</b> com o app do seu banco e confira se o nome e a chave estão certos. Não precisa concluir o pagamento.</p>
+    </div>`;
+  atualizarStatusPix();
+}
+
+function atualizarStatusPix() {
+  const c = lerFormularioPix();
+  const erro = erroConfiguracao(c);
+  const status = $("#pixStatus");
+  const { chave } = normalizarChave(c.tipo, c.chave);
+
+  if (erro) {
+    status.className = "statusPix erro";
+    status.textContent = c.ativo ? `QR desligado até corrigir: ${erro}` : erro;
+  } else {
+    status.className = "statusPix ok";
+    status.textContent = c.ativo ? `✓ Ligado · chave ${chave}` : `✓ Chave ${chave} pronta. Ligue a opção acima para usar.`;
+  }
+
+  $("#pixTeste").hidden = !!erro;
+  if (!erro) {
+    $("#pixTesteQr").innerHTML = qrSvg(gerarPayload({ chave, nome: c.nome, cidade: c.cidade, valor: 100 }));
+  }
+}
+
+function ligarPix() {
+  const painel = $("#painelPix");
+
+  const salvarDepois = () => {
+    clearTimeout(timerSalvarPix);
+    timerSalvarPix = setTimeout(() => ctx.salvarPix(lerFormularioPix()), 300);
+  };
+
+  painel.addEventListener("input", (e) => {
+    if (e.target.id === "pixAtivo") return;
+    atualizarStatusPix();
+    salvarDepois();
+  });
+
+  painel.addEventListener("change", async (e) => {
+    if (e.target.id === "pixTipo") {
+      const tipo = e.target.value;
+      const campoChave = $("#pixChave");
+      campoChave.inputMode = MODO_TECLADO[tipo];
+      campoChave.placeholder = EXEMPLO_CHAVE[tipo];
+      atualizarStatusPix();
+      salvarDepois();
+      return;
+    }
+    if (e.target.id === "pixAtivo") {
+      const config = lerFormularioPix();
+      const erro = erroConfiguracao(config);
+      if (config.ativo && erro) {
+        e.target.checked = false;
+        avisar(`Para ligar: ${erro.charAt(0).toLowerCase() + erro.slice(1)}`);
+        atualizarStatusPix();
+        return;
+      }
+      clearTimeout(timerSalvarPix);
+      await ctx.salvarPix(lerFormularioPix());
+      atualizarStatusPix();
+      avisar(config.ativo ? "QR Code Pix ligado" : "QR Code Pix desligado");
+    }
+  });
+
+  // salva o que foi digitado mesmo se fechar o menu logo em seguida
+  painel.addEventListener("focusout", () => {
+    if (!$("#pixChave")) return;
+    clearTimeout(timerSalvarPix);
+    ctx.salvarPix(lerFormularioPix());
+  });
 }

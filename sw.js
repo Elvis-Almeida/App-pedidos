@@ -6,7 +6,7 @@
 //  baixam tudo de novo na próxima vez que abrirem o app.
 // =============================================================
 
-const VERSAO = "v5-2026-10-09";
+const VERSAO = "v6-2026-10-09";
 const CACHE = `scj-pedidos-${VERSAO}`;
 
 // Caminhos relativos: funciona em qualquer domínio/pasta
@@ -22,6 +22,8 @@ const ARQUIVOS = [
   "./script/menu.js",
   "./script/migracao.js",
   "./script/relatorio.js",
+  "./script/pix.js",
+  "./script/vendor/qrcode.js",
   "./script/ui.js",
   "./fonts/nunito-latin-400-normal.woff2",
   "./fonts/nunito-latin-600-normal.woff2",

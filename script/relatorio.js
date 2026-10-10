@@ -37,9 +37,11 @@ export function calcularResumo(pedidos) {
   let arrecadado = 0;
   let itensVendidos = 0;
   let devolvido = 0;
+  const porForma = { dinheiro: 0, pix: 0 };
 
   for (const pedido of pedidos) {
     arrecadado += pedido.total;
+    porForma[pedido.forma === "pix" ? "pix" : "dinheiro"] += pedido.total;
     for (const d of pedido.devolucoes || []) devolvido += d.valor;
     for (const item of pedido.itens) {
       itensVendidos += item.qtd;
@@ -56,6 +58,7 @@ export function calcularResumo(pedidos) {
     quantidadePedidos: pedidos.length,
     itensVendidos,
     devolvido,
+    porForma,
     ticketMedio: pedidos.length ? Math.round(arrecadado / pedidos.length) : 0,
     ranking,
   };
@@ -74,6 +77,10 @@ export function gerarTextoRelatorio(pedidos) {
   }
   partes.push(linha);
   partes.push(`Total arrecadado: ${formatarDinheiro(r.arrecadado)}`);
+  if (r.porForma.pix) {
+    partes.push(`  Em dinheiro:    ${formatarDinheiro(r.porForma.dinheiro)}`);
+    partes.push(`  No Pix:         ${formatarDinheiro(r.porForma.pix)}`);
+  }
   partes.push(`Pedidos:          ${r.quantidadePedidos}`);
   partes.push(`Itens vendidos:   ${r.itensVendidos}`);
   partes.push(`Ticket médio:     ${formatarDinheiro(r.ticketMedio)}`);
@@ -89,7 +96,8 @@ export function gerarTextoRelatorio(pedidos) {
   partes.push(linha);
   for (const p of pedidos) {
     let cabecalho = `#${p.numero} · ${formatarData(p.data)} · ${formatarDinheiro(p.total)}`;
-    if (p.recebido) cabecalho += ` (${textoPagamento(p)})`;
+    if (p.forma === "pix") cabecalho += " (Pix)";
+    else if (p.recebido) cabecalho += ` (${textoPagamento(p)})`;
     partes.push(cabecalho);
     partes.push(`   ${textoItens(p.itens)}`);
     for (const d of p.devolucoes || []) {

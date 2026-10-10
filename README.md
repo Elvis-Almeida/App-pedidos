@@ -19,15 +19,17 @@ Esse app nasceu de uma dor que percebi nos eventos festivos da igreja: muitas op
 - **Apagar** tira o último item tocado. **Resetar** limpa o pedido (aparece um botão "Desfazer" por alguns segundos).
 - **Finalizar** abre o resumo. Digite o valor recebido ou toque nas notas (+2, +5, +10, +20, +50, +100, "Exato") e o troco aparece na hora (ou quanto falta, em vermelho).
 - **Salvar** guarda o pedido no histórico com data, hora, itens, valor recebido e troco.
+- **Pix (opcional):** com o Pix ligado no menu, a tela Finalizar já abre com o QR Code no valor do pedido. O cliente lê o código, você confere o recebimento no app do banco e toca em **Pago no Pix**. Se o cliente pagar em dinheiro, é só digitar ou tocar numa nota: o QR some e a tela volta ao normal. O relatório separa o que entrou em dinheiro e no Pix.
 - O pedido em andamento não se perde se o app fechar ou o celular reiniciar.
 
 ## Menu secreto
 
-**Toque 5 vezes rápido no topo da tela** (área do pedido). O menu tem três abas:
+**Toque 5 vezes rápido no topo da tela** (área do pedido). O menu tem quatro abas:
 
 - **Resumo** — total arrecadado, número de pedidos, itens vendidos, ticket médio e o ranking de vendas por item. Botões para baixar ou compartilhar o relatório (.txt) e para zerar o histórico no começo de um novo evento.
 - **Pedidos** — todos os pedidos salvos. "Desfazer último pedido" tira o último do histórico e devolve os itens para a tela (para corrigir). Também dá para excluir qualquer pedido.
 - **Devolver item** — em cada pedido salvo. Se faltou um item e o cliente voltou para pegar o dinheiro, toque em − no item, e o app mostra quanto devolver. O item sai do pedido, o total do evento diminui e a devolução fica registrada no pedido e no relatório.
+- **Pix** — liga o QR Code Pix no fim do pedido (vem desligado). Escolha o tipo de chave, digite a chave, o nome de quem recebe e a cidade. Aparece um QR de teste de R$ 1,00 para conferir com o app do banco antes do evento.
 - **Itens** — liga/desliga cada item. O que estiver desligado fica cinza na tela de vendas, marcado como **Esgotado**, e não entra no pedido.
 
 ## Dados
@@ -49,5 +51,7 @@ Tudo fica salvo **no próprio aparelho** (IndexedDB), funciona sem internet e n�
 | `script/migracao.js` | Importa o histórico da versão antiga |
 | `script/ui.js` | Telas, confirmações e avisos |
 | `script/dinheiro.js` | Formatação de valores (em centavos) |
+| `script/pix.js` | Código Pix (BR Code) e QR Code, gerados no aparelho |
+| `script/vendor/qrcode.js` | Biblioteca de QR Code (Kazuhiko Arase, licença MIT) |
 
 Acesse o app: [elvisalmeida.com.br](https://elvisalmeida.com.br/)

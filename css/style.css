@@ -202,6 +202,10 @@ input:focus-visible {
   background: linear-gradient(150deg, var(--accent-red), var(--accent-red-dark));
   box-shadow: 0 3px 14px rgba(224, 82, 82, 0.28);
 }
+.botao.pix {
+  background: linear-gradient(150deg, #32bcad, #1c7d73);
+  box-shadow: 0 3px 14px rgba(50, 188, 173, 0.28);
+}
 .botao.neutro {
   background: var(--surface-3);
   border: 1px solid var(--glass-border);
@@ -710,6 +714,127 @@ input:focus-visible {
   font-weight: 700;
 }
 
+/* ---------- Pix no Finalizar ---------- */
+#telaFinalizar.comPix #btnVoltar {
+  flex: 0.8;
+}
+#areaPix {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: none;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--glass-border);
+  background: linear-gradient(135deg, rgba(50, 188, 173, 0.12), transparent 70%);
+  animation: aparecer 0.2s ease-out;
+}
+.qrPix {
+  flex: none;
+  width: min(200px, 46vw, 28vh);
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.qrPix svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.infoPix {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.rotuloPix {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #5fd6c8;
+}
+#valorPix {
+  font-size: clamp(24px, 7vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.recebedorPix {
+  font-weight: 700;
+  font-size: var(--fs-pequeno);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.infoPix small {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-tertiary);
+}
+
+#telaFinalizar .barraBotoes .botao {
+  white-space: nowrap;
+}
+@media (max-width: 360px) {
+  #telaFinalizar.comPix .barraBotoes .botao {
+    padding: 0 8px;
+    font-size: 15px;
+  }
+}
+
+/* Celulares de tela baixa (ex.: iPhone SE): compacta o Finalizar
+   para os botões Salvar / Pago no Pix sempre caberem */
+#telaFinalizar {
+  overflow-y: auto;
+}
+@media (max-height: 700px) {
+  #telaFinalizar .telaTopo {
+    padding-top: 10px;
+    padding-bottom: 8px;
+  }
+  #areaPix {
+    padding: 10px 16px;
+  }
+  .qrPix {
+    width: min(200px, 46vw, 24vh);
+  }
+  .infoPix small {
+    display: none;
+  }
+  #listaResumo {
+    min-height: 44px;
+  }
+  .linhaResumo {
+    padding: 7px 0;
+  }
+  #caixasValores > div {
+    min-height: 66px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  #inputPago {
+    height: 54px;
+  }
+  #notasRapidas {
+    padding-top: 8px;
+    gap: 6px;
+  }
+  .nota {
+    height: 42px;
+  }
+  #telaFinalizar .barraBotoes {
+    padding-top: 8px;
+  }
+  #telaFinalizar .botao {
+    min-height: 50px;
+  }
+}
+
 /* =============================================
    MENU SECRETO
    ============================================= */
@@ -793,16 +918,22 @@ input:focus-visible {
   font-size: clamp(32px, 10vw, 42px);
   color: #fff;
 }
+.rodapeDestaque {
+  margin: 10px -18px 0;
+  padding: 2px 18px 4px;
+  border-top: 1px solid rgba(74, 143, 255, 0.22);
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
 .linhaTicket {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin: 10px -18px 0;
-  padding: 12px 18px 14px;
-  border-top: 1px solid rgba(74, 143, 255, 0.22);
-  background: rgba(0, 0, 0, 0.12);
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: 9px 0;
+}
+.linhaTicket + .linhaTicket {
+  border-top: 1px solid rgba(74, 143, 255, 0.12);
 }
 .linhaTicket span {
   font-size: var(--fs-pequeno);
@@ -1046,6 +1177,144 @@ input:focus-visible {
   font-size: clamp(22px, 6vw, 26px);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+/* Pix no histórico */
+.pedidoPagamento.pagoPix,
+.corPix {
+  color: #5fd6c8;
+}
+.pedidoPagamento.pagoPix {
+  font-weight: 700;
+}
+
+/* Aba Pix */
+.opcaoPix {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.opcaoPix input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.opcaoPix .nomeItem small {
+  margin-top: 4px;
+  line-height: 1.35;
+}
+.formPix {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.campo > span {
+  font-size: var(--fs-pequeno);
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.campo small {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+.campo input,
+.campo select {
+  width: 100%;
+  height: 48px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 16px; /* 16px evita zoom automático no iPhone */
+  font-weight: 700;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(140, 150, 180, 0.22);
+  border-radius: var(--radius-sm);
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.campo select {
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+    linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+  background-position:
+    calc(100% - 20px) 21px,
+    calc(100% - 15px) 21px;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 36px;
+}
+.campo select option {
+  background: var(--surface-solida);
+}
+.campo input:focus,
+.campo select:focus {
+  outline: none;
+  border-color: var(--accent-teal);
+  background-color: rgba(95, 174, 207, 0.08);
+}
+.campo input::placeholder {
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+.statusPix {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-pequeno);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.statusPix.ok {
+  background: rgba(50, 188, 173, 0.12);
+  border: 1px solid rgba(50, 188, 173, 0.3);
+  color: #5fd6c8;
+}
+.statusPix.erro {
+  background: rgba(240, 180, 90, 0.1);
+  border: 1px solid rgba(240, 180, 90, 0.3);
+  color: #f0b45a;
+}
+.testePix {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+.testePix .qrPix {
+  width: min(120px, 32vw);
+}
+.testePix p {
+  font-size: var(--fs-pequeno);
+  font-weight: 600;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.testePix strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text-primary);
+  font-size: var(--fs-base);
+}
+.testePix b {
+  color: var(--text-primary);
 }
 
 /* Itens / esgotados */

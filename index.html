@@ -49,6 +49,17 @@
         <span class="pilula" id="contadorItens">0 itens</span>
       </header>
 
+      <!-- Aparece sozinho quando o Pix está ligado no menu e some ao digitar dinheiro -->
+      <div id="areaPix" hidden>
+        <div id="qrPix" class="qrPix"></div>
+        <div class="infoPix">
+          <span class="rotuloPix">Pague com Pix</span>
+          <strong id="valorPix">R$ 0,00</strong>
+          <span id="recebedorPix" class="recebedorPix"></span>
+          <small>Confira o recebimento no app do banco antes de entregar.</small>
+        </div>
+      </div>
+
       <div id="listaResumo" class="rolavel"></div>
 
       <div id="caixasValores">
@@ -85,6 +96,7 @@
 
       <div class="barraBotoes">
         <button type="button" class="botao vermelho" id="btnVoltar">Voltar</button>
+        <button type="button" class="botao pix largo" id="btnPagoPix" hidden>Pago no Pix</button>
         <button type="button" class="botao verde largo" id="btnSalvar">Salvar</button>
       </div>
     </section>
@@ -102,11 +114,13 @@
         <button type="button" role="tab" class="aba" data-aba="Resumo" aria-selected="true">Resumo</button>
         <button type="button" role="tab" class="aba" data-aba="Pedidos" aria-selected="false">Pedidos</button>
         <button type="button" role="tab" class="aba" data-aba="Itens" aria-selected="false">Itens</button>
+        <button type="button" role="tab" class="aba" data-aba="Pix" aria-selected="false">Pix</button>
       </div>
 
       <div class="painel rolavel" id="painelResumo" role="tabpanel"></div>
       <div class="painel rolavel" id="painelPedidos" role="tabpanel" hidden></div>
       <div class="painel rolavel" id="painelItens" role="tabpanel" hidden></div>
+      <div class="painel rolavel" id="painelPix" role="tabpanel" hidden></div>
     </section>
 
     <!-- ================= DEVOLVER ITENS DE UM PEDIDO SALVO ================= -->
