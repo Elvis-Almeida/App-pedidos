@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title }}{% endblock %}
+
+{# Tema único: o escuro do app (sem alternar claro/escuro) #}
+{% block dark-mode-vars %}{% endblock %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'painel/painel.css' %}">{% endblock %}
+
+{% block extrahead %}{{ block.super }}
+<link rel="icon" href="{{ marca_favicon }}" type="image/png">
+<meta name="theme-color" content="#0d1018">
+{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+  <a href="{% url 'admin:index' %}"><img class="marcaLogo" src="{{ marca_logo }}" alt="" width="32" height="32">{{ site_header }}</a>
+</div>
+{% endblock %}
+
+{% block nav-global %}<a class="abrirApp" href="/" target="_blank" rel="noopener">Abrir o app ↗</a>{% endblock %}

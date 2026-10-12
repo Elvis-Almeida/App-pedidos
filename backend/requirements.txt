@@ -1,0 +1,7 @@
+# Versões fixas: o build de amanhã é igual ao de hoje.
+Django==6.1.2
+gunicorn==26.2.0
+psycopg[binary]==3.3.6
+whitenoise==6.12.0
+pillow==12.3.0
+segno==1.6.6

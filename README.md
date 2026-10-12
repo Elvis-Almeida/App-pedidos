@@ -1,57 +1,160 @@
-# App de pedidos
+# Vendas Online
 
-### Um **Web App** simples para quem vende com dinheiro em eventos: monta o pedido, soma o total e calcula o troco
+Versão com servidor do app de pedidos. Para quem atende, o app é o mesmo. A diferença é que agora:
 
-<table>
-  <tr>
-    <td><img src='./images/screenshots/f4.jpeg' width='100%'></td>
-    <td><img src='./images/screenshots/f1.jpeg' width='100%'></td>
-    <td><img src='./images/screenshots/f2.jpeg' width='100%'></td>
-    <td><img src='./images/screenshots/f3.jpeg' width='100%'></td>
-  </tr>
-</table>
+- os pedidos de **todos os aparelhos** vão para um servidor central (Django + PostgreSQL);
+- cada aparelho entra com um **código de convite** ligado ao nome de uma pessoa e **fica conectado para sempre**;
+- cardápio (fotos e preços), nome do app, logo, favicon e Pix são configurados no **admin**;
+- esgotados e Pix mudados num aparelho **valem para todos**, e o admin pode **bloquear** essas edições;
+- o admin tem um **dashboard** com cruzamentos e sugestões;
+- o app **continua funcionando sem internet**: as vendas ficam guardadas no celular e sobem quando a conexão volta.
 
-Esse app nasceu de uma dor que percebi nos eventos festivos da igreja: muitas opções de venda com preços diferentes, muita gente para atender e pedidos longos, o que dificultava somar o total e calcular o troco.
+Endereços em produção:
 
-## Como usar
+| | |
+|---|---|
+| App | https://vendas.elvisalmeida.com.br |
+| Admin e dashboard | https://vendas.elvisalmeida.com.br/admin |
+| Homologação | https://vendas-dev.elvisalmeida.com.br |
 
-- **Toque nos itens** para montar o pedido. O topo mostra cada item com a quantidade e o total já somado; cada card mostra quantas unidades estão no pedido.
-- **Apagar** tira o último item tocado. **Resetar** limpa o pedido (aparece um botão "Desfazer" por alguns segundos).
-- **Finalizar** abre o resumo. Digite o valor recebido ou toque nas notas (+2, +5, +10, +20, +50, +100, "Exato") e o troco aparece na hora (ou quanto falta, em vermelho).
-- **Salvar** guarda o pedido no histórico com data, hora, itens, valor recebido e troco.
-- **Pix (opcional):** com o Pix ligado no menu, a tela Finalizar já abre com o QR Code no valor do pedido. O cliente lê o código, você confere o recebimento no app do banco e toca em **Pago no Pix**. Se o cliente pagar em dinheiro, é só digitar ou tocar numa nota: o QR some e a tela volta ao normal. O relatório separa o que entrou em dinheiro e no Pix.
-- O pedido em andamento não se perde se o app fechar ou o celular reiniciar.
+---
 
-## Menu secreto
+## Primeiro uso (depois do deploy)
 
-**Toque 5 vezes rápido no topo da tela** (área do pedido). O menu tem quatro abas:
+1. Entre no admin com o usuário e a senha mostrados pelo `deploy.sh`.
+2. **Configuração**: nome do app, nome curto, logo (gera sozinho os ícones de Android, iPhone e da aba), favicon, Pix e bloqueios.
+3. **Itens do cardápio**: o cardápio original já vem carregado, com fotos. Ajuste preços (em reais), troque fotos, mude a ordem ou tire itens do app desmarcando **No cardápio**.
+4. **Eventos**: crie o evento (ex.: "Festa Junina 2027") e marque **Evento atual**. Se ninguém criar, o primeiro pedido do dia abre um "Vendas de dd/mm/aaaa".
+5. **Pessoas**: cadastre quem vai vender. Ao salvar, um **código de convite** é criado na hora. Abra o convite: ele tem **QR Code e link**. A pessoa lê o QR com o celular e o app já abre conectado. Também dá para digitar o código na tela inicial.
 
-- **Resumo** — total arrecadado, número de pedidos, itens vendidos, ticket médio e o ranking de vendas por item. Botões para baixar ou compartilhar o relatório (.txt) e para zerar o histórico no começo de um novo evento.
-- **Pedidos** — todos os pedidos salvos. "Desfazer último pedido" tira o último do histórico e devolve os itens para a tela (para corrigir). Também dá para excluir qualquer pedido.
-- **Devolver item** — em cada pedido salvo. Se faltou um item e o cliente voltou para pegar o dinheiro, toque em − no item, e o app mostra quanto devolver. O item sai do pedido, o total do evento diminui e a devolução fica registrada no pedido e no relatório.
-- **Pix** — liga o QR Code Pix no fim do pedido (vem desligado). Escolha o tipo de chave, digite a chave, o nome de quem recebe e a cidade. Aparece um QR de teste de R$ 1,00 para conferir com o app do banco antes do evento.
-- **Itens** — liga/desliga cada item. O que estiver desligado fica cinza na tela de vendas, marcado como **Esgotado**, e não entra no pedido.
+Cada convite vale para **um aparelho**. Para outro celular da mesma pessoa, use a ação "Gerar código de convite" na lista de Pessoas.
 
-## Dados
+## No celular
 
-Tudo fica salvo **no próprio aparelho** (IndexedDB), funciona sem internet e não vai para nenhum servidor. Cada celular tem o seu próprio histórico. Na primeira abertura desta versão, o histórico da versão antiga é importado automaticamente.
+- **Selo no canto do topo:** sem nada (ponto verde) significa tudo enviado; "3 pendentes" significa enviando; "offline · 3" significa sem internet, com as vendas guardadas.
+- **Numeração dos pedidos:** cada aparelho tem um prefixo, como `#EA-12` (Elvis Almeida, 12º pedido do evento). Não há conflito entre aparelhos, mesmo offline.
+- **Menu secreto (5 toques no topo):**
+  - Resumo e Pedidos com o filtro **Meus / Todos os aparelhos**.
+  - Em "Todos", aparece também **Vendas por pessoa**.
+  - Só o aparelho que vendeu pode alterar um pedido.
+  - O antigo "Zerar histórico" não existe mais: o admin encerra o evento e abre outro.
 
-## Para quem mantém o app
+## Bloqueios
 
-- **Cardápio e preços:** `script/cardapio.js`. Imagens em `images/alimentos/` (WebP, ~256 px).
-- **Ao publicar qualquer mudança**, aumente a `VERSAO` em `sw.js`, senão os celulares que já instalaram o app continuam com a versão antiga.
-- Sem build: é só HTML, CSS e JavaScript (módulos ES). Para testar no computador, rode um servidor local (ex.: `python3 -m http.server`) e abra `http://localhost:8000` — abrir o `index.html` direto não funciona por causa dos módulos.
+| Onde | O que trava |
+|---|---|
+| Configuração → Bloquear esgotados nos aparelhos | ninguém marca/desmarca esgotado pelo celular |
+| Configuração → Bloquear Pix nos aparelhos | ninguém muda o Pix pelo celular |
+| Configuração → Bloquear alteração de pedidos enviados | depois que o pedido chegou ao servidor, nenhum aparelho devolve item, desfaz ou exclui |
+| Aparelhos → colunas "pode…" | o mesmo, mas só para aquele aparelho |
+| Aparelhos → desmarcar "ativo" | desconecta o aparelho (ele volta para a tela de convite) |
 
-| Arquivo | O que faz |
-| --- | --- |
-| `script/app.js` | Tela principal e finalizar pedido |
-| `script/menu.js` | Menu secreto (resumo, pedidos, itens) |
-| `script/db.js` | Banco local (IndexedDB) |
-| `script/relatorio.js` | Totais e arquivo do relatório |
-| `script/migracao.js` | Importa o histórico da versão antiga |
-| `script/ui.js` | Telas, confirmações e avisos |
-| `script/dinheiro.js` | Formatação de valores (em centavos) |
-| `script/pix.js` | Código Pix (BR Code) e QR Code, gerados no aparelho |
-| `script/vendor/qrcode.js` | Biblioteca de QR Code (Kazuhiko Arase, licença MIT) |
+Um pedido feito offline e corrigido **antes** de chegar ao servidor pode ser alterado mesmo com bloqueio, porque ele ainda não tinha sido enviado.
 
-Acesse o app: [elvisalmeida.com.br](https://elvisalmeida.com.br/)
+Tentativas bloqueadas ficam no **Registro de alterações**, junto com quem marcou esgotado, quem mudou o Pix, devoluções e cancelamentos.
+
+## Dashboard
+
+O filtro no topo (evento e pessoa) vale para a página inteira. **Exportar CSV** baixa uma linha por item vendido, que abre direto no Excel ou no Google Sheets.
+
+- **Indicadores:** total arrecadado, dinheiro e Pix, pedidos, ticket médio, itens por pedido, ritmo (pedidos por hora), devoluções e cancelamentos, com variação em relação ao evento anterior.
+- **"O que os dados dizem":** frases automáticas sobre o pico, o item campeão, o que esgotou e quanto deixou de vender, a pessoa mais ágil, o melhor combo, o fundo de troco e a comparação com o evento anterior.
+- **Movimento:**
+  - Num evento, mostra os pedidos a cada 15 min; em "todos os eventos", por hora do dia.
+  - Separa dinheiro de Pix.
+  - Tem uma versão em tabela.
+- **Tamanho dos pedidos** e **como pagam em dinheiro** (valor exato ou qual nota).
+- **Por pessoa:** pedidos, valor, ticket, itens por pedido, ritmo por hora ativa, intervalo típico entre pedidos, % no Pix, devoluções e cancelamentos.
+- **Itens:**
+  - Classe ABC (os que fazem 80% da receita), presença nos pedidos, hora de pico e devoluções.
+  - Num evento, mostra também **a que horas esgotou e quanto faltou** (estimado pelo ritmo de venda).
+- **Mapa de calor:** item × hora.
+- **O que é comprado junto:** pares de itens com chance e "força" acima do acaso, bons candidatos a combo.
+- **Fundo de troco sugerido:** valor e notas, calculados a partir da hora mais pesada.
+- **Comparação entre eventos** e **quanto preparar no próximo evento** (média dos últimos eventos, somando a demanda perdida quando esgotou, mais 10% de folga).
+
+Para ver o dashboard com dados de mentira (em desenvolvimento ou homologação):
+
+```bash
+python manage.py dados_exemplo           # cria eventos/pessoas "[exemplo]"
+python manage.py dados_exemplo --apagar  # remove só o que foi criado
+```
+
+---
+
+## Desenvolvimento (no seu computador)
+
+```bash
+docker compose -f compose.dev.yml up --build
+```
+
+- App: http://localhost:8000. Admin: http://localhost:8000/admin, usuário `admin`, senha `admin-dev-123`.
+- O código fica montado no container: salvou, recarregou.
+- Em desenvolvimento o service worker fica desligado, para o cache não atrapalhar.
+- Um convite de teste: crie uma pessoa no admin e abra `http://localhost:8000/?convite=CÓDIGO`.
+
+Sem Docker: `cd backend && pip install -r requirements.txt && VENDAS_DEBUG=1 python manage.py preparar && VENDAS_DEBUG=1 python manage.py runserver`. Sem `VENDAS_DB_HOST`, ele usa SQLite.
+
+Testes: `cd backend && VENDAS_DEBUG=1 python manage.py test vendas`.
+
+## Produção e homologação (VPS com Docker Swarm + Traefik)
+
+Uma vez só:
+
+```bash
+cp .env.prod.exemplo .env.prod     # confira VENDAS_REDE_TRAEFIK (rede do seu Traefik)
+cp .env.dev.exemplo  .env.dev      # homologação: crie o DNS vendas-dev.elvisalmeida.com.br
+```
+
+DNS: um registro `A` (ou `CNAME`) para `vendas.elvisalmeida.com.br` (e `vendas-dev…`, se for usar) apontando para a VPS. O certificado HTTPS vem do Let's Encrypt pelo Traefik (`letsencryptresolver`, igual ao Lumen).
+
+A cada publicação, no nó manager:
+
+```bash
+./deploy.sh dev    # homologação: teste aqui primeiro
+./deploy.sh prod   # produção
+```
+
+O `deploy.sh`:
+
+1. Constrói a imagem com uma versão nova. Isso também atualiza o app nos celulares.
+2. Cria os segredos que faltam (chave do Django, senha do banco e do admin) e **mostra a senha do admin uma única vez**.
+3. Atualiza a stack. Cada container, ao subir:
+   - migra o banco (com trava, para duas réplicas não migrarem juntas);
+   - carrega o cardápio inicial se estiver vazio;
+   - cria o admin.
+
+   Se algo falhar, o Swarm volta sozinho para a versão anterior.
+
+Cada ambiente tem banco, fotos e segredos próprios (stacks `vendas` e `vendas-dev`).
+
+Backup: `./backup.sh prod` gera `backups/vendas-DATA.sql.gz` (banco) e `…-media.tar.gz` (fotos e logo). Vale agendar no cron da VPS.
+
+### Segurança
+
+- Os segredos chegam como arquivos (`/run/secrets`), nunca como variável de ambiente.
+- O container roda com a raiz somente leitura e usuário sem privilégios.
+- O banco só fica na rede interna, sem porta publicada.
+- O Traefik limita tentativas em `/admin` e no endpoint de convite. O Django também limita o convite por IP.
+- O token do aparelho fica guardado no servidor só como hash (SHA-256).
+- Há Content-Security-Policy, HSTS e `X-Frame-Options: DENY`.
+
+## Estrutura
+
+```
+backend/
+  config/settings.py          configuração por variáveis VENDAS_*
+  vendas/models.py            dados (configuração, itens, eventos, pessoas, convites, aparelhos, pedidos)
+  vendas/api.py               API dos aparelhos (convite, estado, sincronizar)
+  vendas/servicos.py          regras da sincronização e dos bloqueios
+  vendas/analise.py           cálculos do dashboard
+  vendas/admin.py, painel.py  admin e dashboard
+  vendas/imagens.py           fotos em WebP, ícones gerados do logo
+  vendas/tests/               testes automatizados
+  static/app/                 o app (PWA)
+  static/painel/              estilo do admin e gráficos do dashboard
+  templates/                  telas do admin
+Dockerfile, compose.dev.yml, stack.yml, deploy.sh, backup.sh
+```
+
+Como a sincronização funciona: o celular grava tudo primeiro no próprio banco (IndexedDB) e numa fila. Quando há internet, a fila vai inteira para `/api/sincronizar/`, na ordem em que as coisas aconteceram. Cada operação tem um id único, então reenviar não duplica nada. Em seguida o celular pede `/api/estado/?desde=N` e recebe só o que mudou desde a última vez.

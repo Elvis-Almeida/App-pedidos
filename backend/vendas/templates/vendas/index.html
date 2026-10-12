@@ -1,0 +1,178 @@
+{% load static %}<!doctype html>
+<html lang="pt-br" data-versao="{{ versao }}" data-debug="{{ debug|yesno:'1,0' }}">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Sem zoom (evita zoom sem querer na correria do atendimento) -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="{{ config.nome_curto }}" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0d1018" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="robots" content="noindex" />
+    <meta name="description" content="Pedidos e troco para vendas em eventos" />
+
+    <link rel="icon" href="{{ icones.favicon }}" type="image/png" />
+    <link rel="apple-touch-icon" href="{{ icones.apple }}" />
+    <link rel="manifest" href="{% url 'manifest' %}" />
+    <link rel="preload" href="{% static 'app/fonts/nunito-latin-700-normal.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'app/css/style.css' %}?v={{ versao }}" />
+    <title>{{ config.nome_app }}</title>
+  </head>
+  <body>
+    <!-- ================= TELA PRINCIPAL ================= -->
+    <header id="topo" aria-label="Pedido atual">
+      <div id="statusSync" class="statusSync ok" role="status"><i aria-hidden="true"></i><span></span></div>
+      <div id="listaPedido" aria-live="polite"></div>
+      <div id="caixaTotal">
+        <span class="rotulo" id="qtdItens">0 itens</span>
+        <strong id="valorTotal">R$ 0,00</strong>
+      </div>
+    </header>
+
+    <main id="grade" aria-label="Cardápio"></main>
+
+    <nav id="barraAcoes" class="barraInferior">
+      <button type="button" class="botao azul" id="btnResetar">Resetar</button>
+      <button type="button" class="botao verde" id="btnFinalizar">Finalizar</button>
+      <button type="button" class="botao vermelho" id="btnApagar">Apagar</button>
+    </nav>
+
+    <!-- ================= FINALIZAR PEDIDO ================= -->
+    <section id="telaFinalizar" class="tela" role="dialog" aria-modal="true" aria-labelledby="tituloFinalizar" hidden>
+      <header class="telaTopo">
+        <h2 id="tituloFinalizar">Resumo do pedido</h2>
+        <span class="pilula" id="contadorItens">0 itens</span>
+      </header>
+
+      <!-- Aparece sozinho quando o Pix está ligado e some ao digitar dinheiro -->
+      <div id="areaPix" hidden>
+        <div id="qrPix" class="qrPix"></div>
+        <div class="infoPix">
+          <span class="rotuloPix">Pague com Pix</span>
+          <strong id="valorPix">R$ 0,00</strong>
+          <span id="recebedorPix" class="recebedorPix"></span>
+          <small>Confira o recebimento no app do banco antes de entregar.</small>
+        </div>
+      </div>
+
+      <div id="listaResumo" class="rolavel"></div>
+
+      <div id="caixasValores">
+        <div id="boxTotal">
+          <span class="rotulo">Total</span>
+          <strong id="finTotal">R$ 0,00</strong>
+        </div>
+        <div id="boxTroco">
+          <span class="rotulo" id="rotuloTroco">Troco</span>
+          <strong id="finTroco">—</strong>
+        </div>
+      </div>
+
+      <label class="somenteLeitor" for="inputPago">Valor recebido</label>
+      <input id="inputPago" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="Valor recebido" />
+
+      <div id="notasRapidas" aria-label="Somar nota recebida">
+        <button type="button" class="nota" data-valor="2">+2</button>
+        <button type="button" class="nota" data-valor="5">+5</button>
+        <button type="button" class="nota" data-valor="10">+10</button>
+        <button type="button" class="nota" data-valor="20">+20</button>
+        <button type="button" class="nota" data-valor="50">+50</button>
+        <button type="button" class="nota" data-valor="100">+100</button>
+        <button type="button" class="nota especial" id="btnExato">Exato</button>
+        <button type="button" class="nota especial" id="btnLimparPago">Limpar</button>
+      </div>
+
+      <div class="barraBotoes">
+        <button type="button" class="botao vermelho" id="btnVoltar">Voltar</button>
+        <button type="button" class="botao pix largo" id="btnPagoPix" hidden>Pago no Pix</button>
+        <button type="button" class="botao verde largo" id="btnSalvar">Salvar</button>
+      </div>
+    </section>
+
+    <!-- ================= MENU SECRETO (5 toques no topo) ================= -->
+    <section id="telaMenu" class="tela" role="dialog" aria-modal="true" aria-labelledby="tituloMenu" hidden>
+      <header class="telaTopo">
+        <div class="tituloMenu">
+          <h2 id="tituloMenu">Menu</h2>
+          <p id="menuInfo" class="menuInfo"></p>
+        </div>
+        <button type="button" class="botaoIcone" id="btnFecharMenu" aria-label="Fechar menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+
+      <div class="abas" role="tablist">
+        <button type="button" role="tab" class="aba" data-aba="Resumo" aria-selected="true">Resumo</button>
+        <button type="button" role="tab" class="aba" data-aba="Pedidos" aria-selected="false">Pedidos</button>
+        <button type="button" role="tab" class="aba" data-aba="Itens" aria-selected="false">Itens</button>
+        <button type="button" role="tab" class="aba" data-aba="Pix" aria-selected="false">Pix</button>
+      </div>
+
+      <div class="painel rolavel" id="painelResumo" role="tabpanel"></div>
+      <div class="painel rolavel" id="painelPedidos" role="tabpanel" hidden></div>
+      <div class="painel rolavel" id="painelItens" role="tabpanel" hidden></div>
+      <div class="painel rolavel" id="painelPix" role="tabpanel" hidden></div>
+    </section>
+
+    <!-- ================= CONECTAR APARELHO (convite) ================= -->
+    <section id="telaConectar" class="telaConectar" aria-labelledby="tituloConectar" hidden>
+      <div class="caixaConectar">
+        <img class="logoConectar" src="{{ icones.512 }}" alt="" width="96" height="96" />
+        <h1 id="tituloConectar">{{ config.nome_app }}</h1>
+        <p>Para começar, digite o <b>código de convite</b> que você recebeu de quem organiza.</p>
+        <label class="somenteLeitor" for="codigoConvite">Código de convite</label>
+        <input
+          id="codigoConvite"
+          type="text"
+          inputmode="text"
+          autocomplete="one-time-code"
+          autocapitalize="characters"
+          spellcheck="false"
+          maxlength="9"
+          placeholder="ABCD-2345"
+        />
+        <button type="button" class="botao verde" id="btnConectar" disabled>Conectar</button>
+        <p id="avisoConectar" class="avisoConectar" role="alert" hidden></p>
+        <p class="rodape">Depois de conectado, este aparelho fica conectado e funciona mesmo sem internet.</p>
+      </div>
+    </section>
+
+    <!-- ================= DEVOLVER ITENS ================= -->
+    <div id="devolucao" class="fundoDialogo" hidden>
+      <div class="caixaDialogo caixaDevolucao" role="dialog" aria-modal="true" aria-labelledby="devolucaoTitulo">
+        <h3 id="devolucaoTitulo">Devolver itens</h3>
+        <p>Toque em − nos itens que o cliente está devolvendo.</p>
+        <ul id="devolucaoLista"></ul>
+        <div id="devolucaoValor" class="valorDevolver" aria-live="polite"></div>
+        <div class="barraBotoes">
+          <button type="button" class="botao neutro" id="devolucaoCancelar" data-cancelar>Cancelar</button>
+          <button type="button" class="botao verde" id="devolucaoOk">Confirmar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= CONFIRMAÇÃO ================= -->
+    <div id="dialogo" class="fundoDialogo" hidden>
+      <div class="caixaDialogo" role="alertdialog" aria-modal="true" aria-labelledby="dialogoTitulo" aria-describedby="dialogoTexto">
+        <h3 id="dialogoTitulo"></h3>
+        <p id="dialogoTexto"></p>
+        <div class="barraBotoes">
+          <button type="button" class="botao neutro" id="dialogoCancelar" data-cancelar>Cancelar</button>
+          <button type="button" class="botao verde" id="dialogoOk">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" role="status" aria-live="polite" hidden>
+      <span id="toastTexto"></span>
+      <button type="button" id="toastAcao" hidden></button>
+    </div>
+
+    <script type="module" src="{% static 'app/script/app.js' %}?v={{ versao }}"></script>
+  </body>
+</html>

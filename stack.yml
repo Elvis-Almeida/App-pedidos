@@ -1,0 +1,216 @@
+# Vendas Online — stack para Docker Swarm com Traefik.
+#
+# Serve tanto produção quanto homologação: o que muda está no arquivo .env
+# (.env.prod / .env.dev). Use o deploy.sh, ele cuida de tudo:
+#
+#   ./deploy.sh prod     → https://vendas.elvisalmeida.com.br
+#   ./deploy.sh dev      → https://vendas-dev.elvisalmeida.com.br
+#
+# Cada ambiente tem banco, fotos e segredos próprios (nomes com o prefixo
+# da stack), então mexer na homologação nunca toca a produção.
+
+services:
+  api:
+    image: vendas-online:${VENDAS_TAG:-latest}
+
+    # Raiz somente leitura. O que precisa ser gravado está em volume (fotos)
+    # ou em tmpfs (temporários).
+    read_only: true
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 67108864 # 64 MB
+      # o gunicorn 26 guarda estado em $HOME/.gunicorn
+      - type: tmpfs
+        target: /home/vendas
+        tmpfs:
+          size: 8388608 # 8 MB
+      - type: volume
+        source: media
+        target: /app/media
+
+    environment:
+      VENDAS_DEBUG: "0"
+      VENDAS_HOSTS: "${VENDAS_DOMINIO}"
+      VENDAS_CSRF: "https://${VENDAS_DOMINIO}"
+      VENDAS_DB_HOST: banco
+      VENDAS_DB_NAME: vendas
+      VENDAS_DB_USER: vendas
+      VENDAS_DB_PORT: "5432"
+      VENDAS_WORKERS: "${VENDAS_WORKERS:-2}"
+      VENDAS_VERSAO: "${VENDAS_TAG:-latest}"
+      VENDAS_ADMIN_USUARIO: "${VENDAS_ADMIN_USUARIO:-}"
+      VENDAS_ADMIN_EMAIL: "${VENDAS_ADMIN_EMAIL:-}"
+      # Segredos chegam como arquivos, não como variáveis (variável aparece
+      # em `docker inspect` e em rastros de erro).
+      VENDAS_SECRET_KEY_FILE: /run/secrets/secret_key
+      VENDAS_DB_PASSWORD_FILE: /run/secrets/db_password
+      VENDAS_ADMIN_SENHA_FILE: /run/secrets/admin_senha
+
+    secrets:
+      - secret_key
+      - db_password
+      - admin_senha
+
+    networks:
+      - proxy
+      - interna
+
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request;urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8000/healthz',headers={'Host':'${VENDAS_DOMINIO}'}),timeout=4)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+    deploy:
+      replicas: ${VENDAS_REPLICAS:-2}
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 10s
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+      # As fotos ficam num volume local: as réplicas precisam estar no mesmo
+      # nó que ele (e que o banco) para enxergarem os mesmos arquivos.
+      placement:
+        constraints:
+          - node.role == manager
+
+      labels:
+        - traefik.enable=1
+        - traefik.docker.network=${VENDAS_REDE_TRAEFIK:-crononest}
+
+        # ---- roteador principal (app + API) ----
+        - traefik.http.routers.${VENDAS_STACK}.rule=Host(`${VENDAS_DOMINIO}`)
+        - traefik.http.routers.${VENDAS_STACK}.entrypoints=websecure
+        - traefik.http.routers.${VENDAS_STACK}.priority=1
+        - traefik.http.routers.${VENDAS_STACK}.tls=true
+        - traefik.http.routers.${VENDAS_STACK}.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.${VENDAS_STACK}.service=${VENDAS_STACK}
+        - traefik.http.routers.${VENDAS_STACK}.middlewares=${VENDAS_STACK}-hsts,${VENDAS_STACK}-cabecalhos,${VENDAS_STACK}-compress
+
+        # ---- admin, com limite de tentativas ----
+        - traefik.http.routers.${VENDAS_STACK}-admin.rule=Host(`${VENDAS_DOMINIO}`) && PathPrefix(`/admin`)
+        - traefik.http.routers.${VENDAS_STACK}-admin.entrypoints=websecure
+        - traefik.http.routers.${VENDAS_STACK}-admin.priority=10
+        - traefik.http.routers.${VENDAS_STACK}-admin.tls=true
+        - traefik.http.routers.${VENDAS_STACK}-admin.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.${VENDAS_STACK}-admin.service=${VENDAS_STACK}
+        - traefik.http.routers.${VENDAS_STACK}-admin.middlewares=${VENDAS_STACK}-hsts,${VENDAS_STACK}-cabecalhos,${VENDAS_STACK}-compress,${VENDAS_STACK}-limite-admin
+
+        # ---- convite: único ponto que aceita credencial sem login ----
+        - traefik.http.routers.${VENDAS_STACK}-convite.rule=Host(`${VENDAS_DOMINIO}`) && Path(`/api/auth/convite/`)
+        - traefik.http.routers.${VENDAS_STACK}-convite.entrypoints=websecure
+        - traefik.http.routers.${VENDAS_STACK}-convite.priority=20
+        - traefik.http.routers.${VENDAS_STACK}-convite.tls=true
+        - traefik.http.routers.${VENDAS_STACK}-convite.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.${VENDAS_STACK}-convite.service=${VENDAS_STACK}
+        - traefik.http.routers.${VENDAS_STACK}-convite.middlewares=${VENDAS_STACK}-hsts,${VENDAS_STACK}-cabecalhos,${VENDAS_STACK}-limite-convite
+
+        # ---- serviço ----
+        - traefik.http.services.${VENDAS_STACK}.loadbalancer.server.port=8000
+        - traefik.http.services.${VENDAS_STACK}.loadbalancer.passHostHeader=true
+        - traefik.http.services.${VENDAS_STACK}.loadbalancer.healthcheck.path=/healthz
+        - traefik.http.services.${VENDAS_STACK}.loadbalancer.healthcheck.interval=30s
+        - traefik.http.services.${VENDAS_STACK}.loadbalancer.healthcheck.timeout=5s
+        # Sem isto o Traefik sonda com o IP no Host, o Django responde 400 e
+        # o domínio fica "no available server" com o app saudável.
+        - traefik.http.services.${VENDAS_STACK}.loadbalancer.healthcheck.hostname=${VENDAS_DOMINIO}
+
+        # ---- HSTS ----
+        - traefik.http.middlewares.${VENDAS_STACK}-hsts.headers.stsSeconds=31536000
+        - traefik.http.middlewares.${VENDAS_STACK}-hsts.headers.stsIncludeSubdomains=true
+        - traefik.http.middlewares.${VENDAS_STACK}-hsts.headers.forceSTSHeader=true
+
+        # ---- demais cabeçalhos ----
+        - traefik.http.middlewares.${VENDAS_STACK}-cabecalhos.headers.contentTypeNosniff=true
+        - traefik.http.middlewares.${VENDAS_STACK}-cabecalhos.headers.referrerPolicy=same-origin
+        - traefik.http.middlewares.${VENDAS_STACK}-cabecalhos.headers.frameDeny=true
+        - traefik.http.middlewares.${VENDAS_STACK}-cabecalhos.headers.customResponseHeaders.X-Robots-Tag=noindex,nofollow,noarchive
+        - traefik.http.middlewares.${VENDAS_STACK}-cabecalhos.headers.customResponseHeaders.Server=
+
+        # ---- compressão ----
+        - traefik.http.middlewares.${VENDAS_STACK}-compress.compress=true
+
+        # ---- limites de requisição ----
+        - traefik.http.middlewares.${VENDAS_STACK}-limite-admin.ratelimit.average=60
+        - traefik.http.middlewares.${VENDAS_STACK}-limite-admin.ratelimit.burst=30
+        - traefik.http.middlewares.${VENDAS_STACK}-limite-admin.ratelimit.period=1m
+        - traefik.http.middlewares.${VENDAS_STACK}-limite-convite.ratelimit.average=5
+        - traefik.http.middlewares.${VENDAS_STACK}-limite-convite.ratelimit.burst=3
+        - traefik.http.middlewares.${VENDAS_STACK}-limite-convite.ratelimit.period=1m
+
+  banco:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: vendas
+      POSTGRES_USER: vendas
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      LANG: pt_BR.UTF-8
+    secrets:
+      - db_password
+    volumes:
+      - banco:/var/lib/postgresql/data
+    # Só na rede interna: sem porta publicada e sem acesso ao Traefik.
+    networks:
+      - interna
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vendas -d vendas"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      replicas: 1
+      # banco nunca se duplica: dois processos no mesmo diretório corrompem os dados
+      update_config:
+        order: stop-first
+      restart_policy:
+        condition: any
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  proxy:
+    external: true
+    name: ${VENDAS_REDE_TRAEFIK:-crononest}
+  interna:
+    driver: overlay
+    attachable: true
+
+volumes:
+  banco:
+  media:
+
+secrets:
+  secret_key:
+    external: true
+    name: ${VENDAS_STACK}_secret_key
+  db_password:
+    external: true
+    name: ${VENDAS_STACK}_db_password
+  admin_senha:
+    external: true
+    name: ${VENDAS_STACK}_admin_senha

@@ -1,0 +1,53 @@
+# Desenvolvimento local: código montado, recarga automática, Postgres próprio.
+#
+#   docker compose -f compose.dev.yml up --build
+#   → app:   http://localhost:8000
+#   → admin: http://localhost:8000/admin   (usuário/senha abaixo)
+#
+# Dados de exemplo para o dashboard:
+#   docker compose -f compose.dev.yml exec web python manage.py dados_exemplo
+
+services:
+  web:
+    build: .
+    entrypoint: []
+    command: >
+      sh -c "python manage.py preparar &&
+             python manage.py runserver 0.0.0.0:8000"
+    user: root
+    volumes:
+      - ./backend:/app
+      - media_dev:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      VENDAS_DEBUG: "1"
+      VENDAS_HOSTS: "localhost,127.0.0.1,0.0.0.0"
+      VENDAS_DB_HOST: banco
+      VENDAS_DB_NAME: vendas
+      VENDAS_DB_USER: vendas
+      VENDAS_DB_PASSWORD: vendas-dev
+      VENDAS_ADMIN_USUARIO: admin
+      VENDAS_ADMIN_SENHA: admin-dev-123
+      VENDAS_VERSAO: dev
+    depends_on:
+      banco:
+        condition: service_healthy
+
+  banco:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: vendas
+      POSTGRES_USER: vendas
+      POSTGRES_PASSWORD: vendas-dev
+    volumes:
+      - banco_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vendas -d vendas"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  banco_dev:
+  media_dev:

@@ -1,0 +1,247 @@
+{% extends "admin/base_site.html" %}
+{% load static painel %}
+
+{% block extrastyle %}{{ block.super }}{% endblock %}
+{% block coltype %}colM{% endblock %}
+{% block bodyclass %}{{ block.super }} painel{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+{% with k=dados.indicadores v=dados.variacao %}
+<div id="painel">
+
+  <!-- ===== Filtros (valem para tudo abaixo) ===== -->
+  <form class="filtros" method="get" id="filtros">
+    <div class="tituloPainel">
+      <h1>Dashboard</h1>
+      <p>{% if evento_sel %}{{ evento_sel.nome }}{% if evento_sel.ativo %} · <span class="selo ok">evento atual</span>{% endif %}{% else %}Todos os eventos{% endif %}</p>
+    </div>
+    <label>
+      <span>Evento</span>
+      <select name="evento" data-auto>
+        <option value="0" {% if not evento_id %}selected{% endif %}>Todos os eventos</option>
+        {% for e in eventos %}<option value="{{ e.id }}" {% if e.id == evento_id %}selected{% endif %}>{{ e.nome }}{% if e.ativo %} (atual){% endif %} · {{ e.n }} pedidos</option>{% endfor %}
+      </select>
+    </label>
+    <label>
+      <span>Pessoa</span>
+      <select name="pessoa" data-auto>
+        <option value="">Todas</option>
+        {% for p in pessoas %}<option value="{{ p.id }}" {% if p.id == pessoa_id %}selected{% endif %}>{{ p.nome }}</option>{% endfor %}
+      </select>
+    </label>
+    <noscript><button type="submit" class="button">Aplicar</button></noscript>
+    <a class="button botaoSec" href="{% url 'admin:exportar' %}?evento={{ evento_id|default:'' }}&amp;pessoa={{ pessoa_id|default:'' }}">Exportar CSV</a>
+  </form>
+
+  <!-- ===== Atalhos ===== -->
+  <nav class="atalhos" aria-label="Atalhos">
+    <a href="{% url 'admin:vendas_item_changelist' %}"><b>{{ n_itens }}</b><span>Itens no cardápio</span>{% if n_esgotados %}<em>{{ n_esgotados }} esgotado{{ n_esgotados|pluralize }}</em>{% endif %}</a>
+    <a href="{% url 'admin:vendas_pessoa_changelist' %}"><b>{{ pessoas|length }}</b><span>Pessoas e convites</span></a>
+    <a href="{% url 'admin:vendas_dispositivo_changelist' %}"><b>{{ aparelhos_online|length }}<small>/{{ n_aparelhos }}</small></b><span>Aparelhos online</span></a>
+    <a href="{% url 'admin:vendas_pedido_changelist' %}{% if evento_id %}?evento__id__exact={{ evento_id }}{% endif %}"><b>{{ k.pedidos }}</b><span>Pedidos</span></a>
+    <a href="{% url 'admin:vendas_evento_changelist' %}"><b>{{ eventos|length }}</b><span>Eventos</span></a>
+    <a href="{% url 'admin:vendas_configuracao_changelist' %}"><b>⚙</b><span>Nome, logo, Pix e bloqueios</span></a>
+  </nav>
+
+  {% if aparelhos_online %}
+  <section class="cartaoPainel aoVivo">
+    <h2><span class="pulso" aria-hidden="true"></span>Vendendo agora</h2>
+    <ul>
+      {% for d in aparelhos_online %}<li><b>{{ d.prefixo }}</b> {{ d.pessoa }} <small>{{ d.ultimo_contato|timesince }} atrás</small></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if not k.pedidos %}
+  <section class="cartaoPainel vazio">
+    <h2>Ainda não há vendas {% if evento_sel %}neste evento{% else %}registradas{% endif %}</h2>
+    <p>Crie uma pessoa em <a href="{% url 'admin:vendas_pessoa_add' %}">Pessoas</a>: o código de convite é gerado na hora. Abra o link do convite no celular e comece a vender.</p>
+  </section>
+  {% else %}
+
+  <!-- ===== Indicadores ===== -->
+  <section class="kpis">
+    <div class="kpi heroi">
+      <span>Total arrecadado</span>
+      <strong>{{ k.arrecadado|reais }}</strong>
+      {% if v.arrecadado is not None %}<em class="{% if v.arrecadado >= 0 %}sobe{% else %}desce{% endif %}">{% if v.arrecadado >= 0 %}▲{% else %}▼{% endif %} {{ v.arrecadado|variacao }} vs {{ v.evento }}</em>{% endif %}
+      <div class="divisao">
+        <div><i class="cor1"></i>Dinheiro <b>{{ k.dinheiro|reais }}</b></div>
+        <div><i class="cor2"></i>Pix <b>{{ k.pix|reais }}</b> <small>{{ k.pix_pct|decimal_br }}%</small></div>
+      </div>
+    </div>
+    <div class="kpi"><span>Pedidos</span><strong>{{ k.pedidos }}</strong>{% if v.pedidos is not None %}<em class="{% if v.pedidos >= 0 %}sobe{% else %}desce{% endif %}">{{ v.pedidos|variacao }}</em>{% endif %}</div>
+    <div class="kpi"><span>Ticket médio</span><strong>{{ k.ticket_medio|reais }}</strong>{% if v.ticket_medio is not None %}<em class="{% if v.ticket_medio >= 0 %}sobe{% else %}desce{% endif %}">{{ v.ticket_medio|variacao }}</em>{% endif %}</div>
+    <div class="kpi"><span>Itens vendidos</span><strong>{{ k.itens }}</strong><em class="neutro">{{ k.itens_por_pedido|decimal_br }} por pedido</em></div>
+    <div class="kpi"><span>Ritmo</span><strong>{% if k.pedidos_por_hora %}{{ k.pedidos_por_hora|decimal_br }}<small>/h</small>{% else %}—{% endif %}</strong><em class="neutro">{{ k.duracao_horas|decimal_br }} h de vendas · {{ k.pessoas }} pessoa{{ k.pessoas|pluralize }}</em></div>
+    <div class="kpi"><span>Devoluções</span><strong>{{ k.devolvido|reais }}</strong><em class="neutro">{{ k.devolucoes }} devoluç{{ k.devolucoes|pluralize:"ão,ões" }} · {{ k.cancelados }} cancelado{{ k.cancelados|pluralize }}</em></div>
+  </section>
+
+  <!-- ===== Leituras automáticas ===== -->
+  {% if dados.insights %}
+  <section class="cartaoPainel insights">
+    <h2>O que os dados dizem</h2>
+    <ul>{% for frase in dados.insights %}<li>{{ frase }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  <!-- ===== Movimento ===== -->
+  <section class="cartaoPainel">
+    <h2>{% if dados.fluxo.tipo == "15min" %}Movimento a cada 15 minutos{% else %}Movimento por hora do dia (todos os eventos){% endif %}</h2>
+    <p class="subtitulo">Pedidos por forma de pagamento. Passe o dedo/mouse nas colunas para ver valores.</p>
+    <div class="grafico" id="graficoFluxo" role="img" aria-label="Pedidos ao longo do tempo"></div>
+    <details class="tabelaGrafico"><summary>Ver como tabela</summary>
+      <table><thead><tr><th>Horário</th><th>Dinheiro</th><th>Pix</th><th>Valor</th></tr></thead><tbody>
+      {% for b in dados.fluxo.blocos %}{% if b.dinheiro or b.pix %}<tr><td>{{ b.rotulo }}</td><td>{{ b.dinheiro }}</td><td>{{ b.pix }}</td><td>{{ b.valor|reais }}</td></tr>{% endif %}{% endfor %}
+      </tbody></table>
+    </details>
+  </section>
+
+  <div class="duasColunas">
+    <section class="cartaoPainel">
+      <h2>Tamanho dos pedidos</h2>
+      <p class="subtitulo">Quantos itens cada pedido tem.</p>
+      <div class="grafico baixo" id="graficoTamanho" role="img" aria-label="Distribuição de itens por pedido"></div>
+    </section>
+    <section class="cartaoPainel">
+      <h2>Como pagam em dinheiro</h2>
+      <p class="subtitulo">Valor entregue pelo cliente.</p>
+      <div class="grafico baixo" id="graficoNotas" role="img" aria-label="Notas recebidas"></div>
+    </section>
+  </div>
+
+  <!-- ===== Pessoas ===== -->
+  <section class="cartaoPainel">
+    <h2>Desempenho por pessoa</h2>
+    <p class="subtitulo"><b>Ritmo</b> = pedidos por hora em que a pessoa estava vendendo. <b>Intervalo</b> = tempo típico entre um pedido e o próximo.</p>
+    <div class="rolagemTabela">
+    <table class="tabela">
+      <thead><tr><th>Pessoa</th><th class="num">Pedidos</th><th>Vendido</th><th class="num">Ticket</th><th class="num">Itens/ped.</th><th class="num">Ritmo</th><th class="num">Intervalo</th><th class="num">Pix</th><th class="num">Devol.</th><th class="num">Canc.</th></tr></thead>
+      <tbody>
+      {% with maior=dados.pessoas.0.total %}
+      {% for p in dados.pessoas %}
+        <tr>
+          <td><a href="?evento={{ evento_id|default:0 }}&amp;pessoa={{ p.pessoa_id }}">{{ p.nome }}</a></td>
+          <td class="num">{{ p.pedidos }}</td>
+          <td class="comBarra"><span class="barraTabela" data-p="{% widthratio p.total maior 100 %}"></span><span>{{ p.total|reais }}</span></td>
+          <td class="num">{{ p.ticket_medio|reais }}</td>
+          <td class="num">{{ p.itens_por_pedido|decimal_br }}</td>
+          <td class="num">{% if p.ritmo %}{{ p.ritmo|decimal_br }}/h{% else %}—{% endif %}</td>
+          <td class="num">{% if p.intervalo_mediano %}{{ p.intervalo_mediano|decimal_br }} min{% else %}—{% endif %}</td>
+          <td class="num">{{ p.pix_pct|decimal_br }}%</td>
+          <td class="num">{{ p.devolucoes }}</td>
+          <td class="num">{{ p.cancelados }}</td>
+        </tr>
+      {% endfor %}
+      {% endwith %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- ===== Itens ===== -->
+  <section class="cartaoPainel">
+    <h2>Itens</h2>
+    <p class="subtitulo"><b>Classe A</b> = itens que, juntos, fazem 80% da receita (prioridade de estoque). <b>Presença</b> = % dos pedidos que têm o item.{% if dados.um_evento %} <b>Faltaram</b> = estimativa do que teria vendido depois de esgotar, no mesmo ritmo.{% endif %}</p>
+    <div class="rolagemTabela">
+    <table class="tabela">
+      <thead><tr><th>Item</th><th>Classe</th><th class="num">Qtd</th><th>Receita</th><th class="num">%</th><th class="num">Presença</th><th class="num">Pico</th><th class="num">Devolv.</th>{% if dados.um_evento %}<th class="num">Esgotou</th><th class="num">Faltaram</th>{% endif %}</tr></thead>
+      <tbody>
+      {% with maior=dados.itens.0.receita %}
+      {% for i in dados.itens %}
+        <tr>
+          <td>{{ i.nome }}</td>
+          <td><span class="classe classe{{ i.classe }}">{{ i.classe }}</span></td>
+          <td class="num">{{ i.qtd }}</td>
+          <td class="comBarra"><span class="barraTabela" data-p="{% widthratio i.receita maior 100 %}"></span><span>{{ i.receita|reais }}</span></td>
+          <td class="num">{{ i.receita_pct|decimal_br }}%</td>
+          <td class="num">{{ i.penetracao|decimal_br }}%</td>
+          <td class="num">{{ i.hora_pico|default:"—" }}</td>
+          <td class="num">{{ i.devolvidos|default:"—" }}</td>
+          {% if dados.um_evento %}<td class="num">{{ i.esgotou|default:"—" }}</td><td class="num">{% if i.perdido_estimado %}≈ {{ i.perdido_estimado }}{% else %}—{% endif %}</td>{% endif %}
+        </tr>
+      {% endfor %}
+      {% endwith %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="cartaoPainel">
+    <h2>Quando cada item vende</h2>
+    <p class="subtitulo">Unidades vendidas por hora (os 10 itens que mais saem). Mais claro = mais vendas.</p>
+    <div id="mapaCalor" class="rolagemTabela"></div>
+  </section>
+
+  <div class="duasColunas">
+    <section class="cartaoPainel">
+      <h2>O que é comprado junto</h2>
+      <p class="subtitulo"><b>Chance</b> = de quem leva o 1º, quantos levam o 2º. <b>Força</b> = quantas vezes mais que o acaso (acima de 1,5 já indica combo).</p>
+      {% if dados.cesta %}
+      <table class="tabela">
+        <thead><tr><th>Quem leva…</th><th>…também leva</th><th class="num">Pedidos</th><th class="num">Chance</th><th class="num">Força</th></tr></thead>
+        <tbody>{% for c in dados.cesta %}<tr><td>{{ c.a }}</td><td>{{ c.b }}</td><td class="num">{{ c.juntos }}</td><td class="num">{{ c.confianca|decimal_br }}%</td><td class="num">{{ c.lift|decimal_br }}×</td></tr>{% endfor %}</tbody>
+      </table>
+      {% else %}<p class="vazioTexto">Ainda não há pedidos suficientes para achar combinações.</p>{% endif %}
+    </section>
+
+    <section class="cartaoPainel">
+      <h2>Fundo de troco</h2>
+      {% with t=dados.pagamento.troco %}
+      {% if t %}
+        <p class="subtitulo">Baseado na hora em que mais saiu troco ({{ t.hora }}: {{ t.troco_hora|reais }}), com folga para duas horas de pico.</p>
+        <p class="destaqueTroco">{{ t.valor|reais }}</p>
+        <ul class="notas">
+          {% for n in t.notas %}<li><b>{{ n.qtd }}×</b> R$ {{ n.nota }}</li>{% endfor %}
+          {% if t.moedas %}<li><b>{{ t.moedas|reais }}</b> em moedas</li>{% endif %}
+        </ul>
+        <p class="subtitulo">Troco médio por pedido: {{ k.troco_medio|reais }} · total dado: {{ k.troco_total|reais }}</p>
+      {% else %}<p class="vazioTexto">Sem pedidos em dinheiro com troco ainda.</p>{% endif %}
+      {% endwith %}
+    </section>
+  </div>
+
+  {% if dados.eventos %}
+  <section class="cartaoPainel">
+    <h2>Comparação entre eventos</h2>
+    <div class="grafico baixo" id="graficoEventos" role="img" aria-label="Arrecadação por evento"></div>
+    <div class="rolagemTabela">
+    <table class="tabela">
+      <thead><tr><th>Evento</th><th>Data</th><th class="num">Pedidos</th><th class="num">Arrecadado</th><th class="num">Ticket</th><th class="num">Pix</th><th class="num">Ritmo</th><th class="num">Pessoas</th><th>Campeão</th></tr></thead>
+      <tbody>{% for e in dados.eventos %}<tr>
+        <td><a href="?evento={{ e.id }}">{{ e.nome }}</a></td><td>{{ e.data }}</td><td class="num">{{ e.pedidos }}</td><td class="num">{{ e.arrecadado|reais }}</td>
+        <td class="num">{{ e.ticket_medio|reais }}</td><td class="num">{{ e.pix_pct|decimal_br }}%</td><td class="num">{% if e.pedidos_por_hora %}{{ e.pedidos_por_hora|decimal_br }}/h{% else %}—{% endif %}</td>
+        <td class="num">{{ e.pessoas }}</td><td>{{ e.campeao|default:"—" }}</td></tr>{% endfor %}</tbody>
+    </table>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if dados.previsao.itens %}
+  <section class="cartaoPainel">
+    <h2>Quanto preparar no próximo evento</h2>
+    <p class="subtitulo">Média dos últimos {{ dados.previsao.eventos }} evento{{ dados.previsao.eventos|pluralize }} encerrado{{ dados.previsao.eventos|pluralize }}, somando o que faltou quando o item esgotou, com 10% de folga.</p>
+    <div class="rolagemTabela">
+    <table class="tabela">
+      <thead><tr><th>Item</th><th class="num">Sugestão</th><th class="num">Média</th><th class="num">Menor</th><th class="num">Maior</th></tr></thead>
+      <tbody>{% for i in dados.previsao.itens %}<tr><td>{{ i.nome }}</td><td class="num"><b>{{ i.sugestao }}</b></td><td class="num">{{ i.media|decimal_br }}</td><td class="num">{{ i.minimo }}</td><td class="num">{{ i.maximo }}</td></tr>{% endfor %}</tbody>
+    </table>
+    </div>
+  </section>
+  {% endif %}
+  {% endif %}
+
+  <details class="cartaoPainel todasSecoes">
+    <summary>Todas as seções do admin</summary>
+    {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+  </details>
+</div>
+{{ dados|json_script:"dados-painel" }}
+<script src="{% static 'painel/dashboard.js' %}" defer></script>
+{% endwith %}
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
