@@ -534,10 +534,10 @@ class PedidoAdmin(admin.ModelAdmin):
     @admin.display(description="Situação")
     def situacao(self, obj):
         if obj.cancelado:
-            return format_html('<span class="selo off">cancelado</span>')
+            return mark_safe('<span class="selo off">cancelado</span>')
         if obj.total != obj.total_original:
-            return format_html('<span class="selo aviso">com devolução</span>')
-        return format_html('<span class="selo ok">ok</span>')
+            return mark_safe('<span class="selo aviso">com devolução</span>')
+        return mark_safe('<span class="selo ok">ok</span>')
 
     @admin.action(description="Cancelar pedidos selecionados")
     def cancelar(self, request, queryset):

@@ -272,3 +272,37 @@ class AdminTests(TestCase):
             self.assertEqual(r.status_code, 200, url)
         r = self.client.get(f"/admin/vendas/convite/{Convite.objects.get().pk}/change/")
         self.assertContains(r, "<svg")  # QR do convite
+
+
+class AdminComDadosTests(Base):
+    """Abre cada tela do admin com registros de verdade (as colunas só rodam com dados)."""
+
+    def test_todas_as_telas_com_dados(self):
+        from django.contrib.auth import get_user_model
+
+        token = self.conectar(self.ana)
+        normal, devolvido, cancelado = self.pedido_op(1), self.pedido_op(2), self.pedido_op(3)
+        self.sync(token, [
+            normal, devolvido, cancelado,
+            {"id": "d", "tipo": "devolver", "uuid": str(uuid.uuid4()), "pedido_uuid": devolvido["uuid"],
+             "itens": [{"item_id": self.caldo.id, "nome": "Caldo", "qtd": 1}]},
+            {"id": "c", "tipo": "cancelar_pedido", "pedido_uuid": cancelado["uuid"]},
+            {"id": "e", "tipo": "item_esgotado", "item_id": self.caldo.id, "esgotado": True},
+        ])
+        self.client.force_login(get_user_model().objects.create_superuser("adm2", "a@b.com", "senha-admin-123"))
+        pedido = Pedido.objects.first()
+        urls = [
+            "/admin/", "/admin/?evento=0", "/admin/vendas/pedido/", f"/admin/vendas/pedido/{pedido.pk}/change/",
+            "/admin/vendas/item/", f"/admin/vendas/item/{self.caldo.pk}/change/", "/admin/vendas/pessoa/",
+            f"/admin/vendas/pessoa/{self.ana.pk}/change/", "/admin/vendas/convite/",
+            f"/admin/vendas/convite/{Convite.objects.first().pk}/change/", "/admin/vendas/dispositivo/",
+            f"/admin/vendas/dispositivo/{Dispositivo.objects.first().pk}/change/", "/admin/vendas/evento/",
+            "/admin/vendas/registroalteracao/", "/admin/vendas/configuracao/", "/admin/exportar.csv",
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                r = self.client.get(url, follow=True)
+                self.assertEqual(r.status_code, 200, url)
+        r = self.client.get("/admin/vendas/pedido/")
+        for selo in ("cancelado", "com devolução", ">ok<"):
+            self.assertContains(r, selo)

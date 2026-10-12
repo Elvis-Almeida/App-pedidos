@@ -32,6 +32,7 @@ class Command(BaseCommand):
     help = "Migra o banco (com trava), carrega o cardápio inicial e cria o admin, se configurado."
 
     def handle(self, *args, **opcoes):
+        self._esperar_banco()
         postgres = connection.vendor == "postgresql"
         if postgres:
             with connection.cursor() as c:
@@ -47,6 +48,24 @@ class Command(BaseCommand):
             if postgres:
                 with connection.cursor() as c:
                     c.execute("SELECT pg_advisory_unlock(%s)", [TRAVA])
+
+    def _esperar_banco(self, limite=90):
+        """Na primeira subida da stack o Postgres pode ainda estar iniciando."""
+        import time
+
+        from django.db.utils import OperationalError
+
+        inicio = time.monotonic()
+        while True:
+            try:
+                connection.ensure_connection()
+                return
+            except OperationalError:
+                if time.monotonic() - inicio > limite:
+                    raise
+                self.stdout.write("Esperando o banco ficar disponível…")
+                connection.close()
+                time.sleep(3)
 
     def _criar_admin(self):
         usuario, senha = _env("ADMIN_USUARIO"), _env("ADMIN_SENHA")

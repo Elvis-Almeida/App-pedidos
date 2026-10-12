@@ -21,7 +21,7 @@ Endereços em produção:
 
 ## Primeiro uso (depois do deploy)
 
-1. Entre no admin com o usuário e a senha mostrados pelo `deploy.sh`.
+1. Entre no admin com o usuário `elvis` e a senha mostrada pelo `deploy.sh`.
 2. **Configuração**: nome do app, nome curto, logo (gera sozinho os ícones de Android, iPhone e da aba), favicon, Pix e bloqueios.
 3. **Itens do cardápio**: o cardápio original já vem carregado, com fotos. Ajuste preços (em reais), troque fotos, mude a ordem ou tire itens do app desmarcando **No cardápio**.
 4. **Eventos**: crie o evento (ex.: "Festa Junina 2027") e marque **Evento atual**. Se ninguém criar, o primeiro pedido do dia abre um "Vendas de dd/mm/aaaa".
@@ -92,43 +92,96 @@ docker compose -f compose.dev.yml up --build
 - O código fica montado no container: salvou, recarregou.
 - Em desenvolvimento o service worker fica desligado, para o cache não atrapalhar.
 - Um convite de teste: crie uma pessoa no admin e abra `http://localhost:8000/?convite=CÓDIGO`.
+- No celular (mesma rede Wi-Fi): abra `http://IP-DO-COMPUTADOR:8000`. Sem HTTPS o modo offline não liga, mas todo o resto funciona.
 
-Sem Docker: `cd backend && pip install -r requirements.txt && VENDAS_DEBUG=1 python manage.py preparar && VENDAS_DEBUG=1 python manage.py runserver`. Sem `VENDAS_DB_HOST`, ele usa SQLite.
+Sem Docker:
+
+```bash
+cd backend
+cp .env.exemplo .env          # o Django lê este arquivo sozinho
+pip install -r requirements.txt
+python manage.py preparar     # cria o banco (SQLite), o cardápio e o admin (admin / admin-dev-123)
+python manage.py runserver
+```
 
 Testes: `cd backend && VENDAS_DEBUG=1 python manage.py test vendas`.
 
 ## Produção e homologação (VPS com Docker Swarm + Traefik)
 
-Uma vez só:
+A produção está em `docker-compose.yml`, no mesmo padrão da stack do Lumen:
+
+- serviços `api`, `banco` e `tarefas`;
+- segredos como arquivo, raiz somente leitura e healthcheck com hostname;
+- limites de tentativas em `/admin` e no convite;
+- réplicas `start-first` com rollback.
+
+Os valores padrão do arquivo já são os de produção (`vendas.elvisalmeida.com.br`, rede do Traefik `crononest`).
+
+**Configuração (`.env`):**
 
 ```bash
-cp .env.prod.exemplo .env.prod     # confira VENDAS_REDE_TRAEFIK (rede do seu Traefik)
-cp .env.dev.exemplo  .env.dev      # homologação: crie o DNS vendas-dev.elvisalmeida.com.br
+cp .env.exemplo .env
+nano .env        # domínio, rede do Traefik, usuário do admin, réplicas…
 ```
 
-DNS: um registro `A` (ou `CNAME`) para `vendas.elvisalmeida.com.br` (e `vendas-dev…`, se for usar) apontando para a VPS. O certificado HTTPS vem do Let's Encrypt pelo Traefik (`letsencryptresolver`, igual ao Lumen).
+O `.env.exemplo` lista todas as configurações, cada uma explicada. Sem `.env`, valem os padrões de produção.
 
-A cada publicação, no nó manager:
+O `docker stack deploy` **não lê o `.env` sozinho**: só o `docker compose` lê, o Swarm não. Por isso a publicação é sempre pelo `deploy.sh`, que carrega o arquivo antes (aceita arquivo salvo no Windows, com aspas ou `export`). Para ver a configuração final sem publicar nada:
 
 ```bash
-./deploy.sh dev    # homologação: teste aqui primeiro
-./deploy.sh prod   # produção
+./deploy.sh --conferir
+```
+
+Se quiser rodar na mão, carregue antes: `set -a; . ./.env; set +a; docker stack deploy -c docker-compose.yml vendas`.
+
+| Arquivo | Para quê |
+|---|---|
+| `.env` (de `.env.exemplo`) | servidor, produção |
+| `.env.dev` (de `.env.dev.exemplo`) | servidor, homologação |
+| `backend/.env` (de `backend/.env.exemplo`) | rodar o Django no computador, sem Docker |
+| nenhum | `docker compose -f compose.dev.yml up` já vem configurado |
+
+Nenhum `.env` entra na imagem Docker nem no git (estão no `.dockerignore` e no `.gitignore`).
+
+**Antes da primeira vez:** crie um registro DNS `A` (ou `CNAME`) para `vendas.elvisalmeida.com.br` apontando para a VPS. O certificado HTTPS vem do Let's Encrypt pelo Traefik (`letsencryptresolver`).
+
+**Publicar** (no nó manager, dentro da pasta do projeto):
+
+```bash
+./deploy.sh          # produção
 ```
 
 O `deploy.sh`:
 
-1. Constrói a imagem com uma versão nova. Isso também atualiza o app nos celulares.
-2. Cria os segredos que faltam (chave do Django, senha do banco e do admin) e **mostra a senha do admin uma única vez**.
-3. Atualiza a stack. Cada container, ao subir:
-   - migra o banco (com trava, para duas réplicas não migrarem juntas);
+1. Constrói a imagem `vendas-online:<data-commit>`. A versão nova também faz os celulares baixarem o app atualizado.
+2. Cria os segredos que faltam (`vendas_secret_key`, `vendas_db_password`, `vendas_admin_senha`) e **mostra a senha do admin uma única vez**.
+3. Roda `docker stack deploy -c docker-compose.yml vendas` e **espera** o serviço ficar saudável. Ao subir, a API:
+   - espera o banco;
+   - migra (com trava, para duas réplicas não migrarem juntas);
    - carrega o cardápio inicial se estiver vazio;
    - cria o admin.
 
-   Se algo falhar, o Swarm volta sozinho para a versão anterior.
+   Se algo falhar, o Swarm volta para a versão anterior e o script avisa.
 
-Cada ambiente tem banco, fotos e segredos próprios (stacks `vendas` e `vendas-dev`).
+Também dá para publicar sem o script, como no Lumen, desde que a imagem e os segredos já existam: `docker stack deploy -c docker-compose.yml vendas`.
 
-Backup: `./backup.sh prod` gera `backups/vendas-DATA.sql.gz` (banco) e `…-media.tar.gz` (fotos e logo). Vale agendar no cron da VPS.
+**Homologação** (opcional): `cp .env.dev.exemplo .env.dev`, crie o DNS `vendas-dev.elvisalmeida.com.br` e rode `./deploy.sh dev`. O mesmo arquivo vira a stack `vendas-dev`, com banco, fotos, segredos e roteadores próprios.
+
+**Backup automático:** o serviço `tarefas` guarda, uma vez por dia, uma cópia do banco (`banco-AAAA-MM-DD.dump`) e das fotos e logo (`fotos-AAAA-MM-DD.tar.gz`) no volume `vendas_backups`, mantendo 30 dias. Logo depois de cada deploy já sai a cópia do dia.
+
+- `./backup.sh` copia esses arquivos para a pasta `backups/` da VPS, de onde você leva para fora.
+- `./backup.sh prod agora` faz uma cópia nova na hora (bom antes de mexer em algo).
+- Como restaurar está no próprio `backup.sh`.
+
+**Comandos úteis:**
+
+```bash
+docker service ps vendas_api                     # situação das réplicas
+docker service logs -f vendas_api                # logs da aplicação
+docker service logs vendas_tarefas               # log dos backups
+docker exec -it $(docker ps -q -f name=vendas_api | head -1) python manage.py createsuperuser
+docker exec -it $(docker ps -q -f name=vendas_api | head -1) python manage.py changepassword elvis
+```
 
 ### Segurança
 
@@ -154,7 +207,7 @@ backend/
   static/app/                 o app (PWA)
   static/painel/              estilo do admin e gráficos do dashboard
   templates/                  telas do admin
-Dockerfile, compose.dev.yml, stack.yml, deploy.sh, backup.sh
+Dockerfile, docker-compose.yml (produção), compose.dev.yml (local), deploy.sh, backup.sh
 ```
 
 Como a sincronização funciona: o celular grava tudo primeiro no próprio banco (IndexedDB) e numa fila. Quando há internet, a fila vai inteira para `/api/sincronizar/`, na ordem em que as coisas aconteceram. Cada operação tem um id único, então reenviar não duplica nada. Em seguida o celular pede `/api/estado/?desde=N` e recebe só o que mudou desde a última vez.

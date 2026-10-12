@@ -14,12 +14,37 @@ from django.utils.csp import CSP
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def carregar_arquivo_env(caminho):
+    """Lê um arquivo .env simples (NOME=valor) para o ambiente.
+
+    Não sobrescreve o que já veio do terminal ou do Docker, ignora linhas
+    em branco/comentários e valores vazios, e aceita arquivo salvo no Windows.
+    """
+    if not caminho.is_file():
+        return
+    for linha in caminho.read_text(encoding="utf-8-sig").splitlines():
+        linha = linha.strip()
+        if not linha or linha.startswith("#") or "=" not in linha:
+            continue
+        nome, valor = linha.removeprefix("export ").split("=", 1)
+        nome, valor = nome.strip(), valor.strip()
+        if len(valor) >= 2 and valor[0] == valor[-1] and valor[0] in "\"'":
+            valor = valor[1:-1]
+        if nome and valor:
+            os.environ.setdefault(nome, valor)
+
+
+# backend/.env (para rodar sem Docker). No container não existe: lá tudo vem
+# das variáveis do docker-compose.
+carregar_arquivo_env(BASE_DIR / ".env")
+
+
 def env(nome, padrao=None):
     """Lê VENDAS_<nome>; se existir VENDAS_<nome>_FILE, lê o conteúdo do arquivo."""
     arquivo = os.environ.get(f"VENDAS_{nome}_FILE")
     if arquivo:
         return Path(arquivo).read_text().strip()
-    return os.environ.get(f"VENDAS_{nome}", padrao)
+    return os.environ.get(f"VENDAS_{nome}") or padrao
 
 
 def env_lista(nome, padrao=""):

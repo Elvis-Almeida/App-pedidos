@@ -1,0 +1,335 @@
+# Vendas Online — stack de produção para Docker Swarm com Traefik.
+#
+#   docker stack deploy -c docker-compose.yml vendas
+#
+# Use o deploy.sh: ele constrói a imagem, cria os segredos que faltam, publica
+# e espera o serviço ficar saudável. Ao subir, cada contêiner da API migra o
+# banco sozinho (com trava, para duas réplicas não migrarem ao mesmo tempo);
+# se a migração falhar, o contêiner não fica saudável e o Swarm volta para a
+# versão anterior.
+#
+# As variáveis ${VENDAS_...} vêm do arquivo .env (veja .env.exemplo). Atenção:
+# o `docker stack deploy` NÃO lê o .env sozinho (o `docker compose` lê, o
+# Swarm não). Use o ./deploy.sh, que carrega o .env antes de publicar, ou
+# carregue na mão:   set -a; . ./.env; set +a; docker stack deploy ...
+#
+# Sem .env, valem os padrões abaixo, que são os de PRODUÇÃO. A homologação usa
+# o mesmo arquivo com o .env.dev (VENDAS_STACK=vendas-dev, outro domínio): os
+# nomes de roteadores, segredos, volumes e redes mudam juntos, então um
+# ambiente nunca toca no outro.
+
+services:
+  api:
+    image: vendas-online:${VENDAS_TAG:-latest}
+
+    # Raiz somente leitura. O que a aplicação precisa escrever está em volume
+    # (fotos e logo) ou em tmpfs (temporários do Python e do gunicorn).
+    read_only: true
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 67108864 # 64 MB
+      # A pasta do usuário precisa ser gravável: o gunicorn 26 guarda o estado
+      # do servidor de controle em $HOME/.gunicorn e, sem isto, registra
+      # "Read-only file system" a cada subida.
+      - type: tmpfs
+        target: /home/vendas
+        tmpfs:
+          size: 8388608 # 8 MB
+      - type: volume
+        source: media
+        target: /app/media
+
+    environment:
+      VENDAS_DEBUG: "0"
+      VENDAS_HOSTS: "${VENDAS_DOMINIO:-vendas.elvisalmeida.com.br}"
+      VENDAS_CSRF: "https://${VENDAS_DOMINIO:-vendas.elvisalmeida.com.br}"
+      VENDAS_DB_NAME: vendas
+      VENDAS_DB_USER: vendas
+      VENDAS_DB_HOST: banco
+      VENDAS_DB_PORT: "5432"
+      VENDAS_WORKERS: "${VENDAS_WORKERS:-2}"
+      VENDAS_THREADS: "${VENDAS_THREADS:-4}"
+      # Versão publicada: entra no service worker e faz os celulares baixarem
+      # o app novo na próxima vez que abrirem.
+      VENDAS_VERSAO: "${VENDAS_TAG:-latest}"
+      # Administrador criado na primeira subida (se ainda não existir)
+      VENDAS_ADMIN_USUARIO: "${VENDAS_ADMIN_USUARIO:-elvis}"
+      VENDAS_ADMIN_EMAIL: "${VENDAS_ADMIN_EMAIL:-contato@elvisalmeida.com.br}"
+
+      # Os segredos chegam como arquivos, não como variáveis: variável aparece
+      # em `docker inspect`, em rastro de erro e na lista de processos.
+      VENDAS_SECRET_KEY_FILE: /run/secrets/secret_key
+      VENDAS_DB_PASSWORD_FILE: /run/secrets/db_password
+      VENDAS_ADMIN_SENHA_FILE: /run/secrets/admin_senha
+
+    secrets:
+      - source: secret_key
+        target: secret_key
+      - source: db_password
+        target: db_password
+      - source: admin_senha
+        target: admin_senha
+
+    networks:
+      - proxy
+      - interna
+
+    # A imagem é python:3.13-slim, que não tem wget nem curl: a sonda usa o
+    # próprio Python. O cabeçalho Host vai com o domínio porque o Django
+    # recusa (400) qualquer Host fora de ALLOWED_HOSTS.
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request as u; u.urlopen(u.Request('http://127.0.0.1:8000/healthz', headers={'Host': '${VENDAS_DOMINIO:-vendas.elvisalmeida.com.br}'}), timeout=4)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # inclui o tempo da migração na primeira subida de cada versão
+      start_period: 60s
+
+    deploy:
+      replicas: ${VENDAS_REPLICAS:-2}
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+        monitor: 60s
+      rollback_config:
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 10s
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+      # As fotos ficam num volume local: as réplicas precisam estar no mesmo
+      # nó que ele para enxergarem os mesmos arquivos.
+      placement:
+        constraints:
+          - node.role == manager
+
+      labels:
+        - traefik.enable=1
+        - traefik.docker.network=${VENDAS_REDE_TRAEFIK:-crononest}
+
+        # ---- roteador (app + API) ----
+        - traefik.http.routers.${VENDAS_STACK:-vendas}.rule=Host(`${VENDAS_DOMINIO:-vendas.elvisalmeida.com.br}`)
+        - traefik.http.routers.${VENDAS_STACK:-vendas}.entrypoints=${VENDAS_ENTRYPOINT:-websecure}
+        - traefik.http.routers.${VENDAS_STACK:-vendas}.priority=1
+        - traefik.http.routers.${VENDAS_STACK:-vendas}.tls=true
+        - traefik.http.routers.${VENDAS_STACK:-vendas}.tls.certresolver=${VENDAS_CERTRESOLVER:-letsencryptresolver}
+        - traefik.http.routers.${VENDAS_STACK:-vendas}.service=${VENDAS_STACK:-vendas}
+        - traefik.http.routers.${VENDAS_STACK:-vendas}.middlewares=${VENDAS_STACK:-vendas}-hsts,${VENDAS_STACK:-vendas}-cabecalhos,${VENDAS_STACK:-vendas}-compress
+
+        # ---- roteador do admin, com limite de tentativas ----
+        #
+        # O admin é a porta de entrada para tudo: convites, bloqueios, Pix,
+        # pedidos. Um limite de requisições torna inviável tentar senha por
+        # força bruta a partir de um IP. (Folga maior que a do Lumen porque o
+        # dashboard carrega várias telas seguidas.)
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-admin.rule=Host(`${VENDAS_DOMINIO:-vendas.elvisalmeida.com.br}`) && PathPrefix(`/admin`)
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-admin.entrypoints=${VENDAS_ENTRYPOINT:-websecure}
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-admin.priority=10
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-admin.tls=true
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-admin.tls.certresolver=${VENDAS_CERTRESOLVER:-letsencryptresolver}
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-admin.service=${VENDAS_STACK:-vendas}
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-admin.middlewares=${VENDAS_STACK:-vendas}-hsts,${VENDAS_STACK:-vendas}-cabecalhos,${VENDAS_STACK:-vendas}-compress,${VENDAS_STACK:-vendas}-limite-admin
+
+        # ---- roteador do convite, com limite mais apertado ----
+        #
+        # É o único ponto que aceita credencial sem autenticação prévia.
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-convite.rule=Host(`${VENDAS_DOMINIO:-vendas.elvisalmeida.com.br}`) && Path(`/api/auth/convite/`)
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-convite.entrypoints=${VENDAS_ENTRYPOINT:-websecure}
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-convite.priority=20
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-convite.tls=true
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-convite.tls.certresolver=${VENDAS_CERTRESOLVER:-letsencryptresolver}
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-convite.service=${VENDAS_STACK:-vendas}
+        - traefik.http.routers.${VENDAS_STACK:-vendas}-convite.middlewares=${VENDAS_STACK:-vendas}-hsts,${VENDAS_STACK:-vendas}-cabecalhos,${VENDAS_STACK:-vendas}-limite-convite
+
+        # ---- serviço ----
+        - traefik.http.services.${VENDAS_STACK:-vendas}.loadbalancer.server.port=8000
+        - traefik.http.services.${VENDAS_STACK:-vendas}.loadbalancer.passHostHeader=true
+        - traefik.http.services.${VENDAS_STACK:-vendas}.loadbalancer.healthcheck.path=/healthz
+        - traefik.http.services.${VENDAS_STACK:-vendas}.loadbalancer.healthcheck.interval=30s
+        - traefik.http.services.${VENDAS_STACK:-vendas}.loadbalancer.healthcheck.timeout=5s
+        # Sem este hostname, o Traefik sonda usando o IP do contêiner no
+        # cabeçalho Host. O Django compara esse cabeçalho com ALLOWED_HOSTS,
+        # não reconhece o IP e responde 400. O Traefik conclui que o servidor
+        # está doente, tira do balanceamento, e o domínio passa a devolver
+        # "no available server" — com a aplicação viva e saudável o tempo todo.
+        - traefik.http.services.${VENDAS_STACK:-vendas}.loadbalancer.healthcheck.hostname=${VENDAS_DOMINIO:-vendas.elvisalmeida.com.br}
+
+        # ---- HSTS ----
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-hsts.headers.stsSeconds=31536000
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-hsts.headers.stsIncludeSubdomains=true
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-hsts.headers.stsPreload=true
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-hsts.headers.forceSTSHeader=true
+
+        # ---- demais cabeçalhos ----
+        #
+        # O app, a API e o admin são servidos pelo próprio Django, sem conteúdo
+        # de terceiros: dá para ser restritivo sem quebrar nada. (A política de
+        # conteúdo, CSP, vem do Django.)
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-cabecalhos.headers.contentTypeNosniff=true
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-cabecalhos.headers.browserXssFilter=true
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-cabecalhos.headers.referrerPolicy=same-origin
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-cabecalhos.headers.frameDeny=true
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-cabecalhos.headers.customResponseHeaders.X-Robots-Tag=noindex,nofollow,noarchive
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-cabecalhos.headers.customResponseHeaders.Server=
+
+        # ---- compressão ----
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-compress.compress=true
+
+        # ---- limites de requisição ----
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-limite-admin.ratelimit.average=60
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-limite-admin.ratelimit.burst=30
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-limite-admin.ratelimit.period=1m
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-limite-convite.ratelimit.average=5
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-limite-convite.ratelimit.burst=3
+        - traefik.http.middlewares.${VENDAS_STACK:-vendas}-limite-convite.ratelimit.period=1m
+
+        # ---- só a sua casa no admin (descomente e ponha o IP) ----
+        # - traefik.http.middlewares.${VENDAS_STACK:-vendas}-so-eu.ipallowlist.sourcerange=203.0.113.10/32
+        # e acrescente ${VENDAS_STACK:-vendas}-so-eu à lista de middlewares do roteador do admin.
+
+  banco:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: vendas
+      POSTGRES_USER: vendas
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      LANG: pt_BR.UTF-8
+    secrets:
+      - source: db_password
+        target: db_password
+    volumes:
+      - banco:/var/lib/postgresql/data
+
+    # Somente na rede interna. Sem porta publicada e sem acesso ao Traefik: o
+    # banco só precisa conversar com a aplicação.
+    networks:
+      - interna
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vendas -d vendas"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+    deploy:
+      replicas: 1
+      # Banco não se duplica durante atualização: dois processos no mesmo
+      # diretório de dados corrompem o armazenamento.
+      update_config:
+        order: stop-first
+      restart_policy:
+        condition: any
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+      placement:
+        constraints:
+          - node.role == manager
+
+  # Cópia de segurança diária do banco e das fotos, guardada no volume
+  # "backups" (os últimos VENDAS_BACKUP_DIAS dias, padrão 30). Para levar para fora da VPS, use o
+  # backup.sh ou copie os arquivos desse volume.
+  #
+  # É um laço em shell, e não cron: contêiner com cron precisa de supervisor e
+  # de fuso configurado à parte, e o ganho seria nenhum para uma tarefa só.
+  # Usa a imagem do Postgres porque ela já traz o pg_dump da mesma versão.
+  tarefas:
+    image: postgres:17-alpine
+    environment:
+      PGHOST: banco
+      PGUSER: vendas
+      PGDATABASE: vendas
+      TZ: America/Sao_Paulo
+      BACKUP_DIAS: "${VENDAS_BACKUP_DIAS:-30}"
+    secrets:
+      - source: db_password
+        target: db_password
+    volumes:
+      - backups:/backups
+      - type: volume
+        source: media
+        target: /media
+        read_only: true
+    networks:
+      - interna
+
+    # O entrypoint do Postgres só sobe o servidor quando o comando é "postgres";
+    # com outro comando ele apenas o executa. A imagem não traz healthcheck.
+    command:
+      - /bin/sh
+      - -c
+      - |
+        export PGPASSWORD="$$(cat /run/secrets/db_password)"
+        while true; do
+          # Uma cópia por data. A verificação é pelo arquivo do dia, e não por
+          # horário exato: o laço dorme uma hora e acorda em horários quaisquer.
+          # Logo depois de cada deploy (contêiner novo) já sai a cópia do dia.
+          hoje="$$(date +%Y-%m-%d)"
+          if [ ! -s "/backups/banco-$$hoje.dump" ]; then
+            if pg_dump -Fc -f "/backups/banco-$$hoje.dump.tmp" \
+               && mv "/backups/banco-$$hoje.dump.tmp" "/backups/banco-$$hoje.dump"; then
+              tar -czf "/backups/fotos-$$hoje.tar.gz" -C /media . 2>/dev/null || true
+              echo "backup $$hoje ok: $$(du -h /backups/banco-$$hoje.dump | cut -f1)"
+            else
+              rm -f "/backups/banco-$$hoje.dump.tmp"
+              echo "backup $$hoje FALHOU (o banco ainda está subindo?), tento de novo em 1 h"
+            fi
+            find /backups -type f -mtime +"$$BACKUP_DIAS" -delete
+          fi
+          sleep 3600
+        done
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 30s
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+      # mesmo nó do banco e das fotos
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  proxy:
+    external: true
+    name: ${VENDAS_REDE_TRAEFIK:-crononest}
+  interna:
+    driver: overlay
+    # Atacável para dar para abrir um contêiner avulso nesta rede (ex.: psql
+    # para consultar o banco, ou restaurar um backup).
+    attachable: true
+
+volumes:
+  banco:
+  media:
+  backups:
+
+secrets:
+  secret_key:
+    external: true
+    name: ${VENDAS_STACK:-vendas}_secret_key
+  db_password:
+    external: true
+    name: ${VENDAS_STACK:-vendas}_db_password
+  admin_senha:
+    external: true
+    name: ${VENDAS_STACK:-vendas}_admin_senha

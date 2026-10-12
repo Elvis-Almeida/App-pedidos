@@ -4,6 +4,11 @@
 backend/media
 backend/staticfiles
 backend/dev.sqlite3
-.env*
+# nenhum .env vai para dentro da imagem (podem ter senhas)
+**/.env
+**/.env.*
+!**/.env.exemplo
+!**/.env.*.exemplo
 *.zip
 .git
+backups
